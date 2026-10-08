@@ -1,0 +1,39 @@
+# --- Environment ---
+.env
+.env.local
+*.env.*.local
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+env/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- OS / Editor ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- ML artifacts (future steps) ---
+ml/datasets/*
+!ml/datasets/.gitkeep
+ml/models/*.pt
+ml/models/*.pkl
+ml/experiments/*
+!ml/experiments/.gitkeep

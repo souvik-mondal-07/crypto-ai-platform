@@ -1,0 +1,9 @@
+export { Home } from "./Home";
+export { NotFound } from "./NotFound";
+export { MarketTest } from "./MarketTest";
+export { Login } from "./Login";
+export { Register } from "./Register";
+export { Dashboard } from "./Dashboard";
+export { Markets } from "./Markets";
+export { CoinDetails } from "./CoinDetails";
+export { News } from "./News";

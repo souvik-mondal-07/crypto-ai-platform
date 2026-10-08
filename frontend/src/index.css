@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+}
+
+/*
+ * Autofill contrast fix.
+ *
+ * Chrome/Safari override an autofilled input's background and text
+ * colour with their own (a pale yellow/blue plus near-black text).
+ * Utility classes can't win against that, so it's handled here.
+ *
+ * `-webkit-text-fill-color` is the only way to set the text colour of
+ * an autofilled field, and the large inset box-shadow is the standard
+ * way to repaint its background (the UA style ignores `background`).
+ * Scoped to autofill states only — no !important, and no effect on
+ * normal/focus/error states, which the utility classes handle.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: theme("colors.slate.900");
+  -webkit-box-shadow: 0 0 0 1000px theme("colors.white") inset;
+  caret-color: theme("colors.slate.900");
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus {
+  -webkit-text-fill-color: theme("colors.slate.100");
+  -webkit-box-shadow: 0 0 0 1000px theme("colors.slate.900") inset;
+  caret-color: theme("colors.slate.100");
+}
