@@ -12,6 +12,7 @@ import { MarketsTable } from "../components/markets/MarketsTable";
 import { MarketsTabs } from "../components/markets/MarketsTabs";
 import { useMarketCoins } from "../hooks/useMarketCoins";
 import { useMarketSearch } from "../hooks/useMarketSearch";
+import { useWatchlist } from "../hooks/useWatchlist";
 import { useTrendingCoinIds } from "../hooks/useTrendingCoinIds";
 import { MAX_COMPARE, useUserListsStore } from "../store/userListsStore";
 import { useMarketStore } from "../store/marketStore";
@@ -62,9 +63,10 @@ export function Markets() {
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
   const userId = useUserListsStore((state) => state.userId);
-  const watchlist = useUserListsStore((state) => state.watchlist);
+  // Phase 16: the watchlist is server-backed (per authenticated user), not device-local.
+  const { ids: watchlist, toggle: toggleWatchlistRemote } = useWatchlist();
   const compare = useUserListsStore((state) => state.compare);
-  const toggleWatchlist = useUserListsStore((state) => state.toggleWatchlist);
+  const toggleWatchlist = (coinId: string) => void toggleWatchlistRemote(coinId);
   const toggleCompare = useUserListsStore((state) => state.toggleCompare);
   const removeCompare = useUserListsStore((state) => state.removeCompare);
   const clearCompare = useUserListsStore((state) => state.clearCompare);
@@ -192,9 +194,9 @@ export function Markets() {
   return (
     <AppShell>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Cryptocurrency Markets</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Explore and analyze the synchronized cryptocurrency market.</p>
+        <div className="min-w-0">
+          <h1 className="page-title">Cryptocurrency Markets</h1>
+          <p className="page-subtitle">Explore and analyze the synchronized cryptocurrency market.</p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
             {universeCoins !== null && <span>{universeCoins.toLocaleString()} coins tracked</span>}
             {universeCoins !== null && withMarketData != null && <span aria-hidden="true"> · </span>}
@@ -211,7 +213,7 @@ export function Markets() {
       )}
 
       <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-sky-500 dark:border-slate-800 dark:bg-slate-900 lg:max-w-md lg:flex-1">
+        <div className="flex h-10 min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-card transition-colors focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none lg:max-w-md lg:flex-1">
           <Search className="h-4 w-4 flex-shrink-0 text-slate-400" aria-hidden="true" />
           <input
             type="text"
@@ -229,7 +231,7 @@ export function Markets() {
               type="button"
               onClick={() => setShowCompare((value) => !value)}
               aria-pressed={showCompare}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              className={`btn-secondary ${showCompare ? "!border-sky-500 !text-sky-700 dark:!text-sky-300" : ""}`}
             >
               <GitCompare className="h-4 w-4" aria-hidden="true" />
               Compare{compare.length > 0 ? ` (${compare.length})` : ""}
@@ -241,7 +243,7 @@ export function Markets() {
                 value={coinsState.limit}
                 aria-label="Rows per page"
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="input !w-auto !py-1.5"
               >
                 {PAGE_SIZES.map((size) => (
                   <option key={size} value={size}>{size}</option>
@@ -261,7 +263,7 @@ export function Markets() {
       )}
 
       {search.isSearching ? (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="mt-4 card">
           <CoinTable
             coins={search.results}
             coinMarketData={{}}
@@ -281,7 +283,7 @@ export function Markets() {
             <FilterPanel selection={selection} onChange={handleFilterChange} />
           </div>
 
-          <div className="mt-3 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="mt-3 card">
             <MarketsTable
               coins={coinsState.coins}
               loading={tableLoading}

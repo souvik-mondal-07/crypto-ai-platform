@@ -41,9 +41,9 @@ def test_collection_name_registry_has_all_planned_collections():
     expected = {
         "users", "coins", "market_data", "historical_prices",
         "technical_analysis", "fundamental_analysis", "news",
-        "sentiment", "predictions", "decisions", "ai_analysis", "prediction_results",
+        "sentiment", "predictions", "decisions", "prediction_results",
         "watchlists", "portfolios", "portfolio_transactions", "alerts",
-        "analysis_history", "model_metrics",
+        "analysis_history", "model_metrics", "ai_analysis",
     }
     actual = {c.value for c in CollectionName}
     assert expected == actual

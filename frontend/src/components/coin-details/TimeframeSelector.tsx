@@ -12,7 +12,7 @@ export function TimeframeSelector({ value, onChange, disabled = false }: Timefra
     <div
       role="group"
       aria-label="Select chart timeframe"
-      className="flex gap-1 rounded-lg border border-slate-200 p-0.5 dark:border-slate-700"
+      className="segmented flex-wrap"
     >
       {TIMEFRAMES.map((timeframe) => {
         const isSelected = timeframe === value;
@@ -23,11 +23,7 @@ export function TimeframeSelector({ value, onChange, disabled = false }: Timefra
             onClick={() => onChange(timeframe)}
             disabled={disabled}
             aria-pressed={isSelected}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-              isSelected
-                ? "bg-slate-900 text-white dark:bg-sky-600"
-                : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-            }`}
+            className={`segmented-item ${isSelected ? "segmented-item-active" : ""}`}
           >
             {timeframe}
           </button>

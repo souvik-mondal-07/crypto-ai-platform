@@ -90,7 +90,7 @@ export function MarketsTable({
     <div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="border-b border-slate-100 text-xs uppercase text-slate-400 dark:border-slate-800">
+          <thead className="table-head">
             <tr>
               <th scope="col" className="w-10 px-3 py-2"><span className="sr-only">Compare</span></th>
               <th scope="col" className="w-8 px-1 py-2"><span className="sr-only">Watchlist</span></th>
@@ -150,7 +150,7 @@ export function MarketsTable({
                 <tr
                   key={coin.coin_id}
                   onClick={() => navigate(`/coins/${coin.coin_id}`)}
-                  className="group cursor-pointer border-b border-slate-50 last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
+                  className="table-row group cursor-pointer"
                 >
                   <td className="px-3 py-3" onClick={(event) => event.stopPropagation()}>
                     <input
@@ -192,14 +192,14 @@ export function MarketsTable({
       </div>
 
       {!loading && pages > 0 && (
-        <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-2.5 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <span className="text-xs">Showing {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}</span>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page <= 1} className="flex items-center gap-1 rounded p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-30">
+            <button type="button" onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page <= 1} className="btn-ghost !min-h-[2rem] !px-2 disabled:opacity-30">
               <ChevronLeft className="h-4 w-4" aria-hidden="true" /> Prev
             </button>
             <span>Page {page} of {pages}</span>
-            <button type="button" onClick={() => onPageChange(Math.min(pages, page + 1))} disabled={page >= pages} className="flex items-center gap-1 rounded p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-30">
+            <button type="button" onClick={() => onPageChange(Math.min(pages, page + 1))} disabled={page >= pages} className="btn-ghost !min-h-[2rem] !px-2 disabled:opacity-30">
               Next <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>

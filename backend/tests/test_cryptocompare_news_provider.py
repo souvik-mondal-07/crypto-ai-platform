@@ -45,6 +45,7 @@ async def test_pages_backwards_with_lts():
 async def test_api_key_is_sent_as_header_only_when_configured(monkeypatch):
     from app.config import get_settings
 
+    # Start from "no key configured" regardless of what the developer's local .env contains.
     monkeypatch.setattr(get_settings(), "CRYPTOCOMPARE_API_KEY", "")
     route = respx.get(URL).mock(return_value=httpx.Response(200, json={"Data": []}))
     await CryptoCompareNewsProvider().fetch_latest()

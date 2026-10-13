@@ -38,13 +38,13 @@ export function ColumnSelector({ visible, onToggle, onReset }: ColumnSelectorPro
         aria-haspopup="true"
         aria-expanded={open}
         title="Choose visible columns"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="btn-secondary"
       >
         <Settings2 className="h-4 w-4" aria-hidden="true" />
         Columns
       </button>
       {open && (
-        <div role="group" aria-label="Visible columns" className="absolute right-0 z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+        <div role="group" aria-label="Visible columns" className="absolute right-0 z-30 mt-1 w-56 max-w-[calc(100vw-2rem)] rounded-lg border border-slate-200 bg-white p-2 shadow-pop dark:border-slate-700 dark:bg-slate-900">
           {COLUMNS.map((column) => (
             <label key={column.key} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">
               <input

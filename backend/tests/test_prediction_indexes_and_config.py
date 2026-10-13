@@ -16,7 +16,7 @@ def test_ml_settings_defaults_have_no_machine_specific_paths():
 
 def test_env_examples_document_every_ml_variable():
     for path in (REPO / ".env.example", REPO / "backend" / ".env.example"):
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         for key in ("ML_ARTIFACT_DIR", "ML_DEFAULT_HORIZON", "ML_DEFAULT_MODEL", "ML_MIN_HISTORY_LENGTH"):
             assert f"{key}=" in text, (path, key)
 
@@ -25,7 +25,7 @@ def test_predictions_use_the_existing_collection_and_indexes_are_declared():
     from app.database.collections import CollectionName
 
     assert CollectionName.PREDICTIONS.value == "predictions"
-    src = (REPO / "backend" / "app" / "database" / "indexes.py").read_text()
+    src = (REPO / "backend" / "app" / "database" / "indexes.py").read_text(encoding="utf-8")
     assert "idx_predictions_coin_horizon_generatedat" in src
     assert "idx_predictions_coin_horizon_createdat" in src            # Phase 2 index kept
     assert "expireAfterSeconds" not in src                             # predictions are kept for history

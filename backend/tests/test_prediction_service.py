@@ -17,30 +17,7 @@ from app.services.prediction_service import PredictionService, validate_horizon
 ml_registry = pytest.importorskip("ml.models.model_registry")
 from ml.config.model_config import MLConfig  # noqa: E402
 from ml.pipelines.training_pipeline import train_coin_horizon  # noqa: E402
-def make_candles(n, seed=7, ar=0.35, start=None):
-    """Generate deterministic test-only OHLCV candles."""
-    import numpy as np
-    if start is None:
-        start = pd.Timestamp("2025-01-01", tz="UTC")
-    rng = np.random.default_rng(seed)
-    timestamps = pd.date_range(start=start, periods=n, freq="h", tz="UTC")
-    returns = rng.normal(0.0002, 0.01, size=n)
-    for i in range(1, n):
-        returns[i] = ar * returns[i - 1] + (1 - ar) * returns[i]
-    close = 100 * np.exp(np.cumsum(returns))
-    open_ = np.concatenate(([close[0]], close[:-1]))
-    spread = np.abs(rng.normal(0.005, 0.002, size=n))
-    high = np.maximum(open_, close) * (1 + spread)
-    low = np.minimum(open_, close) * (1 - spread)
-    volume = rng.lognormal(mean=10, sigma=0.25, size=n)
-    return pd.DataFrame({
-        "timestamp": timestamps,
-        "open": open_,
-        "high": high,
-        "low": low,
-        "close": close,
-        "volume": volume,
-    })
+from ml.tests.conftest import make_candles  # noqa: E402
 
 
 class FakeCoins:

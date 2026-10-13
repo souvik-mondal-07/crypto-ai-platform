@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
   toggleTheme: () => void;
+  /** Set the theme explicitly (used to apply a saved account preference). */
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -51,7 +53,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme((current) => (current === "light" ? "dark" : "light"));
   }
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>{children}</ThemeContext.Provider>;
+}
+
+/** Like useTheme, but returns undefined outside a ThemeProvider instead of throwing (for hooks that merely
+ * *apply* a saved theme and must not make every page test or embed depend on the provider). */
+export function useOptionalTheme(): ThemeContextValue | undefined {
+  return useContext(ThemeContext);
 }
 
 export function useTheme(): ThemeContextValue {

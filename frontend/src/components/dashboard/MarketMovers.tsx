@@ -141,10 +141,18 @@ export function MarketMovers() {
   const visible = rows.slice(0, MOVERS_SIZE);
 
   return (
-    <section aria-labelledby="market-movers-heading" className="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <SectionHeading id="market-movers-heading" title="Market Movers" description="Top 24H activity across the market" />
+    <section aria-labelledby="market-movers-heading" className="flex h-full flex-col card card-pad">
+      <SectionHeading
+        id="market-movers-heading"
+        title="Top Movers"
+        actions={
+          <Link to={`/markets?tab=${TABS.find((candidate) => candidate.key === tab)!.marketsTab}`} className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 hover:underline dark:text-sky-400">
+            View All <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          </Link>
+        }
+      />
 
-      <div role="tablist" aria-label="Market movers" className="mb-3 flex flex-wrap gap-0.5 rounded-lg border border-slate-200 p-0.5 dark:border-slate-700">
+      <div role="tablist" aria-label="Market movers" className="mb-3 flex flex-wrap gap-0.5 rounded-lg border border-slate-200 p-0.5 dark:border-brand-500/20">
         {TABS.map((candidate) => (
           <button
             key={candidate.key}
@@ -154,7 +162,7 @@ export function MarketMovers() {
             onClick={() => setTab(candidate.key)}
             className={`flex-1 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
               candidate.key === tab
-                ? "bg-slate-900 text-white dark:bg-sky-600"
+                ? "bg-slate-900 text-white dark:bg-gradient-to-r dark:from-brand-500 dark:to-brand-600 dark:shadow-glow"
                 : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
             }`}
           >
@@ -209,12 +217,6 @@ export function MarketMovers() {
         )}
       </div>
 
-      <Link
-        to={`/markets?tab=${active.marketsTab}`}
-        className="mt-3 inline-flex items-center gap-1 self-start text-xs font-medium text-sky-600 hover:underline dark:text-sky-400"
-      >
-        View all in Markets <ArrowRight className="h-3 w-3" aria-hidden="true" />
-      </Link>
     </section>
   );
 }

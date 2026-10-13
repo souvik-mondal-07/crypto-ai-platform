@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { env } from "../config/environment";
 import { fetchCoinById } from "../services/api/coins.api";
 import { fetchCoinHistory, fetchCoinMarketData } from "../services/api/market.api";
-import { ApiError } from "../types/apiError";
 import type { Coin } from "../types/coin";
 import type { HistoricalCandle, MarketData, Timeframe } from "../types/market";
 import { usePolling } from "./usePolling";
@@ -58,11 +57,9 @@ export function useCoinDetails(coinId: string | undefined) {
       setStatus("success");
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Unable to load this cryptocurrency.";
-      // A missing coin is a normal state, not a generic failure. The backend signals it with the
-      // COIN_NOT_FOUND / INVALID_COIN_ID codes (message: "No coin found with id '...'" /
-      // "coin_id is not a valid identifier."); the wording check covers callers without a code.
-      const byCode = caught instanceof ApiError && (caught.code === "COIN_NOT_FOUND" || caught.code === "INVALID_COIN_ID");
-      setNotFound(byCode || /not found|no coin found/i.test(message) || /not a valid identifier/i.test(message));
+      // The backend returns a distinct message for a missing coin ("No coin found with id '…'.");
+      // treat that as not-found rather than a generic failure.
+      setNotFound(/not found/i.test(message) || /no coin found/i.test(message) || /not a valid identifier/i.test(message));
       setError(message);
       setStatus("error");
     }

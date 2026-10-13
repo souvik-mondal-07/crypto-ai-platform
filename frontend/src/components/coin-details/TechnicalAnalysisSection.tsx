@@ -48,7 +48,7 @@ function IndicatorCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <h3 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
       {children}
     </div>
@@ -78,7 +78,7 @@ export function TechnicalAnalysisSection({
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="mt-6 card card-pad">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Technical Analysis</h2>
@@ -151,7 +151,7 @@ export function TechnicalAnalysisSection({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <IndicatorCard title="RSI">
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <p className="page-title">
                 {formatDecimal(technicalAnalysis.rsi.current, 1)}
               </p>
               {technicalAnalysis.rsi.zone && (
@@ -232,7 +232,7 @@ export function TechnicalAnalysisSection({
             </IndicatorCard>
 
             <IndicatorCard title="ATR">
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <p className="page-title">
                 {formatUsd(technicalAnalysis.atr.current)}
               </p>
               <p className="mt-1 text-xs text-slate-400">{technicalAnalysis.atr.period}-period average true range</p>

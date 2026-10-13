@@ -171,7 +171,7 @@ export function CoinSentimentSection({ coinId }: { coinId: string }) {
   return (
     <section
       aria-labelledby="coin-sentiment-heading"
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className="mt-6 card card-pad"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>

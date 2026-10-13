@@ -20,7 +20,7 @@ export function MoverList({ title, items, loading, error, onRetry, emptyMessage 
   const navigate = useNavigate();
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <h3 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
 
       {loading && (

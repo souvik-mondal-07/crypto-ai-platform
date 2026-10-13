@@ -112,7 +112,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-600 dark:hover:bg-sky-500"
+          className="btn-primary w-full"
         >
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
           {isLoading ? "Registering..." : "Create Account"}

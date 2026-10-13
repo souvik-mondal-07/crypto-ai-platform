@@ -266,6 +266,34 @@ async def initialize_indexes(db: AsyncDatabase) -> None:
             name="idx_aianalysis_prompt_model_generatedat",
         )
 
+        # Phase 16 user features. Every one of these collections is user-scoped, so every index leads
+        # with user_id. The two UNIQUE ones also enforce "one watchlist entry / one holding per user+coin"
+        # at the database level, independent of application checks.
+        user_unique = {"unique": True}
+        await db[CollectionName.WATCHLISTS.value].create_index(
+            [("user_id", ASCENDING), ("coin_id", ASCENDING)], name="uniq_watchlists_user_coin", **user_unique
+        )
+        await db[CollectionName.PORTFOLIOS.value].create_index(
+            [("user_id", ASCENDING), ("coin_id", ASCENDING)], name="uniq_portfolios_user_coin", **user_unique
+        )
+        await db[CollectionName.PORTFOLIO_TRANSACTIONS.value].create_index(
+            [("user_id", ASCENDING), ("created_at", DESCENDING)], name="idx_portfoliotransactions_user_createdat"
+        )
+        await db[CollectionName.ANALYSIS_HISTORY.value].create_index(
+            [("user_id", ASCENDING), ("created_at", DESCENDING)], name="idx_analysishistory_user_createdat"
+        )
+        await db[CollectionName.ANALYSIS_HISTORY.value].create_index(
+            [("user_id", ASCENDING), ("coin_id", ASCENDING), ("analysis_type", ASCENDING), ("created_at", DESCENDING)],
+            name="idx_analysishistory_user_coin_type_createdat",
+        )
+        await db[CollectionName.ALERTS.value].create_index(
+            [("user_id", ASCENDING), ("status", ASCENDING)], name="idx_alerts_user_status"
+        )
+        # The evaluation pass reads every ACTIVE alert regardless of user.
+        await db[CollectionName.ALERTS.value].create_index(
+            [("status", ASCENDING), ("created_at", ASCENDING)], name="idx_alerts_status_createdat"
+        )
+
         logger.info("Database indexes initialized.")
     except PyMongoError as exc:
         logger.warning("Index initialization skipped/incomplete: %s", exc.__class__.__name__)

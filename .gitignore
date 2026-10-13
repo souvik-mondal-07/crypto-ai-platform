@@ -37,3 +37,7 @@ ml/models/*.pt
 ml/models/*.pkl
 ml/experiments/*
 !ml/experiments/.gitkeep
+
+# --- ML Model Artifacts ---
+ml/artifacts/*
+!ml/artifacts/README.md

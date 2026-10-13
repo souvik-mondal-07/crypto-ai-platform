@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchAiAnalysis, generateAiAnalysis } from "../services/api/aiAnalysis.api";
 import type { AiAnalysisResponse } from "../types/aiAnalysis";
-import { describeAiError, isNoAnalysisYet, logAiError, type AiErrorInfo } from "../utils/aiAnalysisErrors";
+import { describeAiError, isNoAnalysisYet, type AiErrorInfo } from "../utils/aiAnalysisErrors";
 
 interface Loaded {
   coinId: string;
@@ -94,14 +94,12 @@ export function useAiAnalysis(coinId: string | undefined) {
             commit(await generateAiAnalysis(coinId, { signal }));
           } catch (caught) {
             if (signal.aborted) return;
-            logAiError("refreshing the stored analysis", caught);
             setNote(describeAiError(caught).message);
             setPhase("ready");
           }
         }
       } catch (caught) {
         if (signal.aborted) return;
-        logAiError(mode === "regenerate" ? "regenerating" : "loading", caught);
         const info = describeAiError(caught);
         if (mode === "regenerate") {
           // Keep the explanation that is on screen; just say why a new one was not produced.

@@ -9,8 +9,12 @@ traceback or internal exception detail to the client.
 """
 
 import logging
+import math
+from typing import Any
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.providers.errors import (
@@ -38,7 +42,28 @@ def _error_body(code: str, message: str) -> dict:
     return {"error": {"code": code, "message": message}}
 
 
+def _json_safe(value: Any) -> Any:
+    """
+    Make validation-error details strictly JSON-compliant. Pydantic echoes the offending `input` back in
+    each error, so a request containing NaN / Infinity / -Infinity would otherwise make the response
+    itself unserializable (`ValueError: Out of range float values are not JSON compliant`). Non-finite
+    floats are replaced with their text form ("NaN", "Infinity", "-Infinity"); strict JSON stays on.
+    """
+    if isinstance(value, float) and not math.isfinite(value):
+        return "NaN" if math.isnan(value) else ("Infinity" if value > 0 else "-Infinity")
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(RequestValidationError)
+    async def handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+        # Same shape as FastAPI's default 422 (`{"detail": [...]}`), just guaranteed JSON-safe.
+        return JSONResponse(status_code=422, content={"detail": _json_safe(jsonable_encoder(exc.errors()))})
+
     @app.exception_handler(AppError)
     async def handle_app_error(_: Request, exc: AppError) -> JSONResponse:
         return JSONResponse(status_code=exc.status_code, content=_error_body(exc.code, exc.message))

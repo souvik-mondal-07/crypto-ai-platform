@@ -108,3 +108,12 @@ class BinanceProvider(MarketDataProvider):
             except (TypeError, ValueError, IndexError, OverflowError):
                 continue
         return out
+
+    async def get_klines(self, symbol: str, interval: str, limit: int) -> list[list]:
+        """Raw exchange klines (open-time ms, OHLCV, ...) for the ML prediction engine.
+
+        Unlike `get_historical_ohlcv` this is not tied to a UI timeframe; the ML
+        pipeline chooses its own interval/limit (limit <= 1000 per Binance's API).
+        """
+        async with httpx.AsyncClient() as http_client:
+            return await self._client.get_klines(http_client, symbol, interval, min(max(limit, 1), 1000))

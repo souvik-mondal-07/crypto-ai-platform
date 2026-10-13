@@ -16,10 +16,10 @@ interface PerformanceChartProps {
 
 const PALETTE = {
   light: { text: "#475569", grid: "#f1f5f9", border: "#e2e8f0" },
-  dark: { text: "#cbd5e1", grid: "#1e293b", border: "#334155" },
+  dark: { text: "#94a3b8", grid: "#14213d", border: "#1f2f55" },
 };
 
-const UP = { line: "#16a34a", top: "rgba(22,163,74,0.25)", bottom: "rgba(22,163,74,0)" };
+const UP = { line: "#2dd4bf", top: "rgba(45,212,191,0.28)", bottom: "rgba(45,212,191,0)" };
 const DOWN = { line: "#dc2626", top: "rgba(220,38,38,0.25)", bottom: "rgba(220,38,38,0)" };
 
 interface Hover {
@@ -116,7 +116,7 @@ export function PerformanceChart({ candles, positive, height = 320, ariaLabel }:
       <div ref={containerRef} role="img" aria-label={ariaLabel} className="w-full" style={{ height }} />
       {hover && (
         <div
-          className="pointer-events-none absolute top-2 z-10 rounded-md border border-slate-200 bg-white/95 px-2 py-1 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900/95"
+          className="pointer-events-none absolute top-2 z-10 rounded-lg border border-slate-200 bg-white/95 px-2.5 py-1.5 text-xs shadow-sm dark:border-brand-500/30 dark:bg-slate-900/95"
           style={{ left: Math.min(Math.max(hover.x + 12, 0), Math.max((containerRef.current?.clientWidth ?? 0) - 150, 0)) }}
         >
           <p className="font-semibold tabular-nums text-slate-900 dark:text-slate-100">{formatUsd(hover.value)}</p>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useCoinPredictions } from "../../hooks/useCoinPredictions";
+import { useRecordHistory } from "../../hooks/useRecordHistory";
 import type { PredictionHorizon } from "../../types/predictions";
 import { chooseHorizon, describeUnavailable } from "../../utils/predictionDisplay";
 import { EmptyState } from "../common/EmptyState";
@@ -17,6 +18,8 @@ import { PredictionSummary } from "../prediction/PredictionSummary";
  */
 export function PredictionSection({ coinId }: { coinId: string }) {
   const { data, loading, error, retry } = useCoinPredictions(coinId);
+  // Phase 16: remember (per user) that this prediction was viewed, once one has actually loaded.
+  useRecordHistory(coinId, "prediction", data !== null && data.predictions.length > 0);
   const [selected, setSelected] = useState<PredictionHorizon | null>(null);
 
   const available = data?.predictions.map((p) => p.horizon) ?? [];
@@ -27,7 +30,7 @@ export function PredictionSection({ coinId }: { coinId: string }) {
   return (
     <section
       aria-labelledby="coin-prediction-heading"
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className="mt-6 card card-pad"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>

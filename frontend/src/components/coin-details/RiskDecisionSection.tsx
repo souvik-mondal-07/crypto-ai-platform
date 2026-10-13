@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 
 import { useCoinDecision } from "../../hooks/useCoinDecision";
+import { useRecordHistory } from "../../hooks/useRecordHistory";
 import type { DecisionResponse } from "../../types/decisions";
 import {
   predictionMissingButDecided,
@@ -103,11 +104,12 @@ function Decision({ data }: { data: DecisionResponse }) {
  */
 export function RiskDecisionSection({ coinId }: { coinId: string }) {
   const { data, loading, refreshing, error, retry, refresh } = useCoinDecision(coinId);
+  useRecordHistory(coinId, "risk_decision", data !== null);
 
   return (
     <section
       aria-labelledby="coin-risk-decision-heading"
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className="mt-6 card card-pad"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>

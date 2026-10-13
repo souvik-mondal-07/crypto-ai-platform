@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Star } from "lucide-react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Bell, ChevronRight, Wallet } from "lucide-react";
 
 import { AppShell } from "../components/layout/AppShell";
 import { CoinLogo } from "../components/market/CoinLogo";
@@ -19,6 +19,10 @@ import { AiAnalysisSection } from "../components/coin-details/AiAnalysisSection"
 import { FundamentalAnalysisSection } from "../components/coin-details/FundamentalAnalysisSection";
 import { TechnicalAnalysisSection } from "../components/coin-details/TechnicalAnalysisSection";
 import { useUserListsStore } from "../store/userListsStore";
+import { WatchlistButton } from "../components/watchlist/WatchlistButton";
+import { DataKindBadge } from "../components/ui/DataKindBadge";
+import { useChartHeight } from "../hooks/useChartHeight";
+import { useRecordHistory } from "../hooks/useRecordHistory";
 import { useCoinDetails } from "../hooks/useCoinDetails";
 import { useFundamentals } from "../hooks/useFundamentals";
 import { useTechnicalAnalysis } from "../hooks/useTechnicalAnalysis";
@@ -33,9 +37,9 @@ import {
 export function CoinDetails() {
   const { coinId } = useParams<{ coinId: string }>();
   const navigate = useNavigate();
+  const { hash } = useLocation();
+  const chartHeight = useChartHeight();
   const recordView = useUserListsStore((state) => state.recordView);
-  const toggleWatchlist = useUserListsStore((state) => state.toggleWatchlist);
-  const starred = useUserListsStore((state) => (coinId ? state.watchlist.includes(coinId) : false));
 
   const {
     coin,
@@ -73,18 +77,26 @@ export function CoinDetails() {
     refresh: refreshFundamentals,
   } = useFundamentals(coin ? coinId : undefined);
 
-  // Remember this coin for the Dashboard's "Recently Viewed" (device-local).
-  // This is a hook, so it must run on EVERY render, before the early returns below (a different
-  // number of hooks between renders — e.g. loading -> not-found — makes React throw). It depends
-  // only on primitive values, so it records once per coin load rather than on every poll/refresh.
-  const viewedName = coin?.name;
-  const viewedSymbol = coin?.symbol;
-  const viewedLogo = coin?.logo_url ?? null;
+  // Phase 16: remember (per user) that this coin's analysis was viewed, once it has really loaded.
+  useRecordHistory(coin ? coinId : undefined, "coin_analysis", technicalAnalysis !== null && technicalAnalysis !== undefined);
+
+  // Deep links from the History page (/coins/:id#coin-prediction) jump to the relevant section once the coin has loaded.
   useEffect(() => {
-    if (coinId && viewedName !== undefined && viewedSymbol !== undefined) {
-      recordView({ coin_id: coinId, name: viewedName, symbol: viewedSymbol, logo_url: viewedLogo });
+    if (!coin || !hash) return;
+    const target = document.getElementById(hash.slice(1));
+    if (target && typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "start" });
+  }, [coin, hash]);
+
+  // Every hook above this point runs on every render; the early returns below must stay AFTER all hooks.
+  // Remember this coin for the Dashboard's "Recently Viewed" (device-local).
+  const viewedName = coin?.name;
+  useEffect(() => {
+    if (coin && coinId) {
+      recordView({ coin_id: coinId, name: coin.name, symbol: coin.symbol, logo_url: coin.logo_url });
     }
-  }, [coinId, viewedName, viewedSymbol, viewedLogo, recordView]);
+    // Record once per coin load, not on every poll/refresh of the same coin.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coinId, viewedName]);
 
   // Guard against an undefined/blank route param before anything is requested.
   if (!coinId) {
@@ -105,12 +117,12 @@ export function CoinDetails() {
       <AppShell>
         <div className="py-12 text-center">
           <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Cryptocurrency not found.</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="page-subtitle">
             This coin doesn't exist, or hasn't been synchronized yet.
           </p>
           <Link
             to="/markets"
-            className="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 dark:bg-sky-600 dark:hover:bg-sky-500"
+            className="btn-primary mt-4"
           >
             Back to Markets
           </Link>
@@ -132,7 +144,7 @@ export function CoinDetails() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        className="btn-ghost mb-4 !px-2"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Back
@@ -155,61 +167,67 @@ export function CoinDetails() {
 
       {!loading && coin && (
         <>
-          {/* Coin header */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <CoinLogo src={coin.logo_url} alt={coin.name} size={44} />
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                  {coin.name}{" "}
-                  <span className="text-base font-medium text-slate-400">{coin.symbol}</span>
-                </h1>
-                {coin.market_cap_rank !== null && (
-                  <p className="text-sm text-slate-400">#{coin.market_cap_rank}</p>
-                )}
+          {/* Coin identity + current price */}
+          <div className="card card-pad">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <CoinLogo src={coin.logo_url} alt={coin.name} size={48} />
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-2xl">
+                    {coin.name}{" "}
+                    <span className="text-base font-medium text-slate-400">{coin.symbol}</span>
+                  </h1>
+                  {coin.market_cap_rank !== null && (
+                    <p className="text-sm text-slate-400">#{coin.market_cap_rank}</p>
+                  )}
+                </div>
               </div>
-              {coinId && (
-                <button
-                  type="button"
-                  onClick={() => toggleWatchlist(coinId)}
-                  aria-pressed={starred}
-                  aria-label={starred ? `Remove ${coin.name} from watchlist` : `Add ${coin.name} to watchlist`}
-                  title={starred ? "Remove from watchlist" : "Add to watchlist"}
-                  className="rounded p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-                >
-                  <Star className={`h-5 w-5 ${starred ? "fill-amber-400 text-amber-400" : "text-slate-300 hover:text-amber-400 dark:text-slate-600"}`} aria-hidden="true" />
-                </button>
-              )}
+
+              <div className="text-left sm:text-right">
+                <p className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
+                  {formatUsd(market?.price_usd)}
+                </p>
+                <p className={`text-sm font-medium tabular-nums ${changeColorClass(market?.percent_change_24h)}`}>
+                  {market?.price_change_24h_usd !== null && market?.price_change_24h_usd !== undefined && (
+                    <span>{formatUsd(market.price_change_24h_usd)} </span>
+                  )}
+                  ({formatPercent(market?.percent_change_24h)}) 24h
+                </p>
+              </div>
             </div>
 
-            <div className="text-right">
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                {formatUsd(market?.price_usd)}
-              </p>
-              <p className={`text-sm font-medium ${changeColorClass(market?.percent_change_24h)}`}>
-                {market?.price_change_24h_usd !== null && market?.price_change_24h_usd !== undefined && (
-                  <span>{formatUsd(market.price_change_24h_usd)} </span>
-                )}
-                ({formatPercent(market?.percent_change_24h)}) 24h
-              </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+              {coinId && <WatchlistButton coinId={coinId} coinName={coin.name} />}
+              <Link
+                to="/portfolio"
+                state={{ addCoin: { id: coin.id, name: coin.name, symbol: coin.symbol, logo_url: coin.logo_url } }}
+                className="btn-secondary"
+              >
+                <Wallet className="h-4 w-4" aria-hidden="true" />
+                Add to Portfolio
+              </Link>
+              <Link
+                to="/alerts"
+                state={{ alertCoin: { id: coin.id, name: coin.name, symbol: coin.symbol, logo_url: coin.logo_url } }}
+                className="btn-secondary"
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                Set price alert
+              </Link>
+              <DataKindBadge kind="observed" />
             </div>
+
+            {market?.last_updated && (
+              <p className="mt-3 text-xs text-slate-400" title={formatAbsoluteDateTime(market.last_updated)}>
+                Last updated: {formatRelativeTime(market.last_updated)}
+                {market.is_stale && " — this data may be out of date"}
+              </p>
+            )}
+
+            {!market && (
+              <p className="mt-3 text-xs text-slate-400">No market data has been synchronized for this coin yet.</p>
+            )}
           </div>
-
-          {market?.last_updated && (
-            <p
-              className="mt-2 text-xs text-slate-400"
-              title={formatAbsoluteDateTime(market.last_updated)}
-            >
-              Last updated: {formatRelativeTime(market.last_updated)}
-              {market.is_stale && " — this data may be out of date"}
-            </p>
-          )}
-
-          {!market && (
-            <p className="mt-2 text-xs text-slate-400">
-              No market data has been synchronized for this coin yet.
-            </p>
-          )}
 
           <CoinSectionNav
             sections={[
@@ -226,10 +244,10 @@ export function CoinDetails() {
           />
 
           {/* Chart */}
-          <div id="coin-chart" className="mt-6 scroll-mt-28 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div id="coin-chart" className="mt-6 scroll-mt-40 card card-pad lg:scroll-mt-28">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Price Chart</h2>
+                <h2 className="section-title">Price Chart</h2>
                 {granularity && !historyLoading && (
                   <p className="text-xs text-slate-400">{granularity} candles</p>
                 )}
@@ -238,13 +256,13 @@ export function CoinDetails() {
             </div>
 
             {historyLoading && (
-              <div className="flex h-[400px] items-center justify-center">
+              <div className="flex h-[280px] items-center justify-center sm:h-[400px]">
                 <Loader label="Loading chart data..." />
               </div>
             )}
 
             {!historyLoading && historyError && (
-              <div className="flex h-[400px] flex-col items-center justify-center gap-2">
+              <div className="flex h-[280px] flex-col items-center justify-center gap-2 sm:h-[400px]">
                 <ErrorMessage message="Unable to load historical data." />
                 <button
                   type="button"
@@ -257,18 +275,26 @@ export function CoinDetails() {
             )}
 
             {!historyLoading && !historyError && candles.length === 0 && (
-              <div className="flex h-[400px] items-center justify-center">
+              <div className="flex h-[280px] items-center justify-center sm:h-[400px]">
                 <EmptyState message="No historical data available for this timeframe." />
               </div>
             )}
 
             {!historyLoading && !historyError && candles.length > 0 && (
-              <CandlestickChart candles={candles} showMovingAverages={showMovingAverageOverlay} />
+              <>
+                <CandlestickChart candles={candles} showMovingAverages={showMovingAverageOverlay} height={chartHeight} />
+                {showMovingAverageOverlay && (
+                  <ul aria-label="Chart legend" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                    <li className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded bg-amber-500" aria-hidden="true" />SMA 20</li>
+                    <li className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded bg-violet-500" aria-hidden="true" />SMA 50</li>
+                  </ul>
+                )}
+              </>
             )}
           </div>
 
           {/* Market statistics */}
-          <div id="coin-overview" className="mt-6 scroll-mt-28">
+          <div id="coin-overview" className="mt-6 scroll-mt-40 lg:scroll-mt-28">
             <CoinMarketStats coin={coin} market={market} />
           </div>
 
@@ -277,11 +303,14 @@ export function CoinDetails() {
             <CoinAthAtl market={market} />
           </div>
 
-          <div className="mt-6 rounded-lg border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
-            <p className="text-xs text-slate-400">AI-assisted analysis is not implemented yet.</p>
-          </div>
+          <p role="note" className="mt-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+            Each section below is labelled by what it is: <strong className="font-medium">observed data</strong> is measured, while
+            <strong className="font-medium"> model estimates</strong>, <strong className="font-medium">risk assessments</strong> and
+            <strong className="font-medium"> AI-generated</strong> text are analysis. None of it is a guarantee of future prices or financial advice.
+          </p>
 
-          <div id="coin-technical" className="scroll-mt-28">
+          <div id="coin-technical" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="observed" /></div>
           <TechnicalAnalysisSection
             technicalAnalysis={technicalAnalysis}
             loading={technicalAnalysisLoading}
@@ -293,7 +322,8 @@ export function CoinDetails() {
           />
           </div>
 
-          <div id="coin-fundamental" className="scroll-mt-28">
+          <div id="coin-fundamental" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="observed" /></div>
           <FundamentalAnalysisSection
             fundamentals={fundamentals}
             loading={fundamentalsLoading}
@@ -306,22 +336,27 @@ export function CoinDetails() {
           </div>
 
           {/* Phase 12: news + sentiment load independently (own loading/error/empty states). */}
-          <div id="coin-sentiment" className="scroll-mt-28">
+          <div id="coin-sentiment" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="model" /></div>
             <CoinSentimentSection key={`sentiment-${coinId}`} coinId={coinId} />
           </div>
           {/* Phase 13: ML prediction loads independently (own loading/error/unavailable states). */}
-          <div id="coin-prediction" className="scroll-mt-28">
+          <div id="coin-prediction" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="model" /></div>
             <PredictionSection key={`prediction-${coinId}`} coinId={coinId} />
           </div>
           {/* Phase 14: risk & decision loads independently (own loading/error/no-decision states). */}
-          <div id="coin-risk-decision" className="scroll-mt-28">
+          <div id="coin-risk-decision" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="risk" /></div>
             <RiskDecisionSection key={`risk-decision-${coinId}`} coinId={coinId} />
           </div>
           {/* Phase 15: Gemini explains the analysis above. Loads independently; failure never affects the page. */}
-          <div id="coin-ai-analysis" className="scroll-mt-28">
+          <div id="coin-ai-analysis" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="ai" /></div>
             <AiAnalysisSection key={`ai-analysis-${coinId}`} coinId={coinId} />
           </div>
-          <div id="coin-news" className="scroll-mt-28">
+          <div id="coin-news" className="scroll-mt-40 lg:scroll-mt-28">
+            <div className="-mb-3 mt-6"><DataKindBadge kind="observed" /></div>
             <CoinNewsSection key={`news-${coinId}`} coinId={coinId} coinName={coin.name} />
           </div>
         </>

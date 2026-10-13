@@ -48,7 +48,7 @@ export function NewsCard({ article, compact = false, showCoins = true }: NewsCar
   const showImage = !compact && article.image_url && !imageFailed;
 
   return (
-    <article className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+    <article className="flex gap-3 card p-3">
       {showImage && (
         <img
           src={article.image_url as string}

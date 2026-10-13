@@ -221,8 +221,7 @@ def test_no_data_at_all_gives_no_risk_score():
 
 
 def test_a_risk_score_needs_volatility_or_liquidity_evidence():
-    bare_market = market(market_cap_usd=None, volume_24h_usd=None, high_24h_usd=None, low_24h_usd=None)
-    inputs = DecisionInputs(market=bare_market, fundamental=fundamental_strong(), sentiment=sentiment_positive(), prediction=prediction_up())
+    inputs = DecisionInputs(fundamental=fundamental_strong(), sentiment=sentiment_positive(), prediction=prediction_up())
     result = calculate_risk(inputs)
     assert not result.available and result.score is None and "volatility nor liquidity" in result.reason
 
@@ -264,10 +263,3 @@ def test_same_input_gives_the_same_risk_result():
 def test_custom_config_is_independent_of_the_default():
     assert isinstance(CFG, RiskConfig)
     assert DEFAULT_ENGINE_CONFIG.risk_config_version == "1.0"
-
-
-def test_no_risk_score_without_usable_market_data_even_if_other_modules_have_data():
-    for status in (not_ok("missing", "No market data"), not_ok("stale", "old")):
-        inputs = replace(bullish_inputs(), market=market(status=status))
-        result = calculate_risk(inputs)
-        assert not result.available and result.score is None and result.level is None

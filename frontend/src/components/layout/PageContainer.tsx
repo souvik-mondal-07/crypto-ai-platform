@@ -12,7 +12,9 @@ interface PageContainerProps {
 export function PageContainer({ children, wide = false }: PageContainerProps) {
   return (
     <main
-      className={`mx-auto w-full px-4 py-10 sm:px-6 lg:px-8 ${wide ? "max-w-7xl" : "max-w-3xl"}`}
+      id="main-content"
+      tabIndex={-1}
+      className={`mx-auto w-full min-w-0 px-4 py-6 focus:outline-none sm:px-6 sm:py-8 lg:px-8 ${wide ? "max-w-[1680px]" : "max-w-3xl"}`}
     >
       {children}
     </main>

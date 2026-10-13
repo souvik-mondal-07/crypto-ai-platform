@@ -18,6 +18,8 @@ interface AuthState {
   /** Called once on app startup: if a token is stored, verify it against /auth/me before trusting it. */
   initializeAuth: () => Promise<void>;
   clearError: () => void;
+  /** Replace the stored user after a server-confirmed profile change (never a local guess). */
+  setUser: (user: User) => void;
 }
 
 /**
@@ -105,6 +107,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+  setUser: (user) => set({ user }),
 }));
 
 // A 401 on any authenticated request (not a login/register attempt —

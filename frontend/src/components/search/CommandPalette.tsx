@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowDownRight, ArrowUpRight, GitCompare, LayoutDashboard, LineChart, Search, Star, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Bell, GitCompare, History as HistoryIcon, LayoutDashboard, LineChart, Search, Star, Wallet, type LucideIcon } from "lucide-react";
 
 import { useCoinSearch } from "../../hooks/useCoinSearch";
 import { SearchResultRow } from "./SearchResultRow";
@@ -15,13 +15,16 @@ interface PaletteAction {
 
 /**
  * Only destinations that really exist. "Search coin" isn't a list entry — it
- * is what typing in the box does. Watchlist and Compare are modes of the
- * Markets page (see pages/Markets.tsx), not separate routes.
+ * is what typing in the box does. Compare is a mode of the Markets page
+ * (see pages/Markets.tsx), not a separate route.
  */
 const ACTIONS: PaletteAction[] = [
   { id: "dashboard", label: "Open Dashboard", hint: "Market overview", icon: LayoutDashboard, to: "/dashboard" },
   { id: "markets", label: "Open Markets", hint: "Explore all coins", icon: LineChart, to: "/markets" },
-  { id: "watchlist", label: "Open Watchlist", hint: "Your starred coins", icon: Star, to: "/markets?tab=watchlist" },
+  { id: "watchlist", label: "Open Watchlist", hint: "Your starred coins", icon: Star, to: "/watchlist" },
+  { id: "portfolio", label: "Open Portfolio", hint: "Your holdings", icon: Wallet, to: "/portfolio" },
+  { id: "alerts", label: "Open Alerts", hint: "Your price alerts", icon: Bell, to: "/alerts" },
+  { id: "history", label: "Open History", hint: "Analyses you viewed", icon: HistoryIcon, to: "/history" },
   { id: "compare", label: "Compare coins", hint: "Side-by-side metrics", icon: GitCompare, to: "/markets?compare=1" },
   { id: "gainers", label: "View Gainers", hint: "Top 24H risers", icon: ArrowUpRight, to: "/markets?tab=gainers" },
   { id: "losers", label: "View Losers", hint: "Top 24H fallers", icon: ArrowDownRight, to: "/markets?tab=losers" },

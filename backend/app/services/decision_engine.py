@@ -537,7 +537,12 @@ def evaluate(inputs: DecisionInputs, config: EngineConfig = DEFAULT_ENGINE_CONFI
     """Run the full risk + decision calculation. Pure function of `inputs` and `config`."""
     cfg = config.decision
     signals = {k: build(inputs, cfg) for k, build in _SIGNAL_BUILDERS.items()}
-    risk = calculate_risk(inputs, config.risk)
+    # Without usable market data there is no honest basis for a risk assessment (and the decision is gated anyway), so
+    # none is offered — a partial score built only from the other modules would look like a real one. A STALE snapshot
+    # still gets its risk, since it is merely old.
+    market_status = inputs.market.status
+    risk_basis = inputs if (market_status.usable or market_status.state == STATE_STALE) else DecisionInputs()
+    risk = calculate_risk(risk_basis, config.risk)
     risk.config_version = config.risk_config_version
     weights = _effective_weights(signals, cfg)
     quality = _data_quality(inputs, signals, risk, cfg)

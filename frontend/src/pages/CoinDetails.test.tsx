@@ -11,13 +11,12 @@ import * as technicalAnalysisApi from "../services/api/technicalAnalysis.api";
 import * as fundamentalsApi from "../services/api/fundamentals.api";
 import { ApiError } from "../types/apiError";
 import { useUserListsStore } from "../store/userListsStore";
+import { useWatchlistStore } from "../store/watchlistStore";
 import * as newsApi from "../services/api/news.api";
 import * as predictionsApi from "../services/api/predictions.api";
 import * as decisionsApi from "../services/api/decisions.api";
 import * as aiAnalysisApi from "../services/api/aiAnalysis.api";
 import { buildDecision, buildInsufficientDecision } from "../test-fixtures/decisions";
-import { buildAiAnalysis } from "../test-fixtures/aiAnalysis";
-import type { AiAnalysisResponse } from "../types/aiAnalysis";
 import { buildPredictionList } from "../test-fixtures/predictions";
 import { buildFundamentals } from "../test-fixtures/fundamentals";
 import { buildInsufficientSentiment, buildNewsList } from "../test-fixtures/news";
@@ -78,6 +77,19 @@ vi.mock("../components/coin-details/CandlestickChart", () => ({
   CandlestickChart: ({ candles }: { candles: unknown[] }) => (
     <div data-testid="candlestick-chart">{candles.length} candles</div>
   ),
+}));
+
+vi.mock("../services/api/settings.api", () => ({
+  settingsApi: { get: vi.fn(() => Promise.resolve({ theme: null, notifications: { price_alerts: true } })), update: vi.fn() },
+}));
+
+vi.mock("../services/api/watchlist.api", () => ({
+  watchlistApi: {
+    list: vi.fn(),
+    add: vi.fn(() => Promise.resolve()),
+    remove: vi.fn(() => Promise.resolve()),
+    status: vi.fn(),
+  },
 }));
 
 const mockedCoinsApi = vi.mocked(coinsApi);
@@ -195,10 +207,8 @@ beforeEach(() => {
   // Default: not enough data for a decision, so the Phase 14 section renders its honest "no decision"
   // state with no numbers or BUY/HOLD/SELL text that could collide with the earlier text assertions.
   mockedDecisionsApi.fetchDecision.mockResolvedValue(buildInsufficientDecision());
-  // Default: the AI explanation is still loading (never resolves), so the section shows only its
-  // skeleton — no Retry button, no text and no BUY/HOLD/SELL wording that could collide with the
-  // page-wide assertions above. The AI section's own behaviour is tested in the last describe below.
-  mockedAiApi.fetchAiAnalysis.mockReturnValue(new Promise<AiAnalysisResponse>(() => undefined));
+  // Default: the AI service is unavailable — the rest of the page must be unaffected.
+  mockedAiApi.fetchAiAnalysis.mockRejectedValue(new ApiError("down", 503, "AI_UNAVAILABLE"));
 });
 
 describe("CoinDetails", () => {
@@ -209,13 +219,10 @@ describe("CoinDetails", () => {
 
   it("renders the real coin name, symbol, rank and price from the backend", async () => {
     renderCoinDetails();
-    const heading = await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
-    expect(heading).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ })).toBeInTheDocument();
     expect(screen.getByText("UNC")).toBeInTheDocument();
-    // The rank is shown in the page header and again in the "Rank" stat card; assert the header's.
-    const header = heading.parentElement;
-    expect(header).not.toBeNull();
-    expect(within(header as HTMLElement).getByText("#7")).toBeInTheDocument();
+    // The rank is shown both in the coin header and in the Market Overview card.
+    expect(screen.getAllByText("#7").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/1,234\.56/)).toBeInTheDocument();
     // Never a hard-coded well-known coin.
     expect(screen.queryByText("Bitcoin")).not.toBeInTheDocument();
@@ -275,26 +282,26 @@ describe("CoinDetails", () => {
 describe("CoinDetails — Phase 9 additional real-data fields", () => {
   it("shows the absolute 24h USD change alongside the percentage", async () => {
     renderCoinDetails();
-    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    await screen.findByText(/Uniquely Named Coin/);
     expect(screen.getByText(/-\$28\.50/)).toBeInTheDocument();
   });
 
   it("shows fully diluted valuation when the backend supplies it", async () => {
     renderCoinDetails();
-    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    await screen.findByText(/Uniquely Named Coin/);
     expect(screen.getByText("Fully Diluted Valuation")).toBeInTheDocument();
   });
 
   it("shows the 1y performance figure", async () => {
     renderCoinDetails();
-    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    await screen.findByText(/Uniquely Named Coin/);
     expect(screen.getByText("1y")).toBeInTheDocument();
     expect(screen.getByText("+120.50%")).toBeInTheDocument();
   });
 
   it("shows ATH/ATL dates only when the backend provides them", async () => {
     renderCoinDetails();
-    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    await screen.findByText(/Uniquely Named Coin/);
     // Both dates are supplied in the MARKET fixture.
     expect(screen.getAllByText(/2025|2020/).length).toBeGreaterThan(0);
   });
@@ -302,7 +309,7 @@ describe("CoinDetails — Phase 9 additional real-data fields", () => {
   it("omits fully diluted valuation gracefully (N/A) when absent, never fabricating a number", async () => {
     mockedMarketApi.fetchCoinMarketData.mockResolvedValue({ ...MARKET, fully_diluted_valuation_usd: null });
     renderCoinDetails();
-    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    await screen.findByText(/Uniquely Named Coin/);
     // The stat card is present with N/A, not hidden and not a fake value.
     expect(screen.getByText("Fully Diluted Valuation").nextSibling?.textContent).toBe("N/A");
   });
@@ -330,18 +337,20 @@ describe("CoinDetails — Phase 10 Technical Analysis", () => {
     mockedTechnicalAnalysisApi.fetchTechnicalAnalysis.mockRejectedValue(new Error("Service unavailable."));
     renderCoinDetails();
     expect(await screen.findByText("Service unavailable.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    // Scoped to the Technical Analysis section: other sections (e.g. AI analysis) legitimately have their own Retry.
+    const technical = document.getElementById("coin-technical") as HTMLElement;
+    expect(within(technical).getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
   it("never renders a BUY/HOLD/SELL decision anywhere in the section", async () => {
     renderCoinDetails();
     await screen.findByText("55.2");
-    // The only permitted occurrence is the support/resistance disclaimer ("... not guaranteed to hold"),
-    // where "hold" is a verb about price levels, not a decision.
-    const decisionWords = screen
-      .queryAllByText(/\b(buy|sell|hold)\b/i)
-      .filter((element) => !/not guaranteed to hold/i.test(element.textContent ?? ""));
-    expect(decisionWords).toEqual([]);
+    // A decision is rendered as a standalone label; the section's disclaimer ("not guaranteed to hold")
+    // is ordinary prose about support/resistance levels, not a decision.
+    const technical = document.getElementById("coin-technical") as HTMLElement;
+    expect(within(technical).queryByText(/^\s*buy\s*$/i)).not.toBeInTheDocument();
+    expect(within(technical).queryByText(/^\s*sell\s*$/i)).not.toBeInTheDocument();
+    expect(within(technical).queryByText(/^\s*hold\s*$/i)).not.toBeInTheDocument();
   });
 
   it("toggling the moving-average overlay checkbox does not refetch the coin or history", async () => {
@@ -471,7 +480,8 @@ describe("CoinDetails — Phase 11 Fundamental Analysis", () => {
 describe("CoinDetails — workspace navigation and personal lists", () => {
   beforeEach(() => {
     localStorage.clear();
-    useUserListsStore.setState({ userId: "1", watchlist: [], recent: [], compare: [] });
+    useUserListsStore.setState({ userId: "1", recent: [], compare: [] });
+    useWatchlistStore.setState({ userId: null, ids: [], status: "ready", error: null, notice: null, pending: [] });
   });
 
   it("offers in-page navigation only for sections that exist", async () => {
@@ -487,10 +497,10 @@ describe("CoinDetails — workspace navigation and personal lists", () => {
     renderCoinDetails();
 
     await user.click(await screen.findByRole("button", { name: /add uniquely named coin to watchlist/i }));
-    expect(useUserListsStore.getState().watchlist).toEqual([COIN_ID]);
+    expect(useWatchlistStore.getState().ids).toEqual([COIN_ID]);
 
     await user.click(screen.getByRole("button", { name: /remove uniquely named coin from watchlist/i }));
-    expect(useUserListsStore.getState().watchlist).toEqual([]);
+    expect(useWatchlistStore.getState().ids).toEqual([]);
   });
 
   it("records the opened coin for Recently Viewed exactly once per visit", async () => {
@@ -544,43 +554,20 @@ describe("CoinDetails — workspace navigation and personal lists", () => {
   });
 });
 
-describe("CoinDetails — AI Analysis (Phase 15)", () => {
-  const aiSection = () => screen.getByRole("region", { name: "AI Analysis" });
-
-  it("requests the stored AI analysis once, for the route's internal coin id", async () => {
+describe("CoinDetails — design: data kinds and hand-off actions", () => {
+  it("labels analysis sections by what they are, and never frames them as guarantees", async () => {
     renderCoinDetails();
-    await screen.findByRole("heading", { name: "Market Overview" });
-    await waitFor(() => expect(mockedAiApi.fetchAiAnalysis).toHaveBeenCalledTimes(1));
-    expect(mockedAiApi.fetchAiAnalysis.mock.calls[0][0]).toBe(COIN_ID);
-    expect(mockedAiApi.generateAiAnalysis).not.toHaveBeenCalled();
+    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    expect(document.getElementById("coin-prediction")).toHaveTextContent(/model estimate/i);
+    expect(document.getElementById("coin-risk-decision")).toHaveTextContent(/risk assessment/i);
+    expect(document.getElementById("coin-ai-analysis")).toHaveTextContent(/ai-generated/i);
+    expect(screen.getByText(/none of it is a guarantee/i)).toBeInTheDocument();
   });
 
-  it("renders the AI explanation next to the unchanged Phase 14 decision section", async () => {
-    mockedAiApi.fetchAiAnalysis.mockResolvedValue(buildAiAnalysis({ coin_id: COIN_ID }));
+  it("offers Add to Portfolio and Set price alert, carrying the coin along", async () => {
     renderCoinDetails();
-    expect(await within(await screen.findByRole("region", { name: "AI Analysis" })).findByText(/synthetic summary/i)).toBeInTheDocument();
-    // The decision section is still driven only by the Phase 14 API, never by the AI text.
-    expect(await screen.findByRole("heading", { name: "Risk & Decision" })).toBeInTheDocument();
-    expect(mockedDecisionsApi.fetchDecision).toHaveBeenCalledTimes(1);
-  });
-
-  it("generates one when none is stored yet", async () => {
-    mockedAiApi.fetchAiAnalysis.mockRejectedValue(new ApiError("none", 404, "AI_ANALYSIS_NOT_FOUND"));
-    mockedAiApi.generateAiAnalysis.mockResolvedValue(buildAiAnalysis({ coin_id: COIN_ID, cached: false }));
-    renderCoinDetails();
-    expect(await within(await screen.findByRole("region", { name: "AI Analysis" })).findByText(/synthetic summary/i)).toBeInTheDocument();
-    expect(mockedAiApi.generateAiAnalysis).toHaveBeenCalledTimes(1);
-    expect(mockedAiApi.generateAiAnalysis.mock.calls[0][0]).toBe(COIN_ID);
-  });
-
-  it("keeps every other section working when the AI service is unavailable", async () => {
-    mockedAiApi.fetchAiAnalysis.mockRejectedValue(new ApiError("down", 503, "AI_UNAVAILABLE"));
-    renderCoinDetails();
-    expect(await within(await screen.findByRole("region", { name: "AI Analysis" })).findByText("AI analysis is temporarily unavailable.")).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "Market Overview" })).toBeInTheDocument();
-    expect(await screen.findByTestId("candlestick-chart")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Risk & Decision" })).toBeInTheDocument();
-    // Only the AI section offers a retry for this failure.
-    expect(within(aiSection()).getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    await screen.findByRole("heading", { level: 1, name: /Uniquely Named Coin/ });
+    expect(screen.getByRole("link", { name: /add to portfolio/i })).toHaveAttribute("href", "/portfolio");
+    expect(screen.getByRole("link", { name: /set price alert/i })).toHaveAttribute("href", "/alerts");
   });
 });

@@ -6,27 +6,10 @@ const coin = (n: number) => ({ coin_id: `c${n}`, name: `Coin ${n}`, symbol: `C${
 
 beforeEach(() => {
   localStorage.clear();
-  useUserListsStore.setState({ userId: null, watchlist: [], recent: [], compare: [] });
+  useUserListsStore.setState({ userId: null, recent: [], compare: [] });
 });
 
 describe("userListsStore", () => {
-  it("toggles the watchlist and persists it per user", () => {
-    useUserListsStore.getState().load("user-1");
-    useUserListsStore.getState().toggleWatchlist("btc");
-    expect(useUserListsStore.getState().watchlist).toEqual(["btc"]);
-
-    // A different account on the same browser does not see it.
-    useUserListsStore.getState().load("user-2");
-    expect(useUserListsStore.getState().watchlist).toEqual([]);
-
-    // ...and the first account gets it back.
-    useUserListsStore.getState().load("user-1");
-    expect(useUserListsStore.getState().watchlist).toEqual(["btc"]);
-
-    useUserListsStore.getState().toggleWatchlist("btc");
-    expect(useUserListsStore.getState().watchlist).toEqual([]);
-  });
-
   it("records recently viewed coins newest-first without duplicates, capped", () => {
     useUserListsStore.getState().load("u");
     for (let i = 0; i < MAX_RECENT + 3; i += 1) useUserListsStore.getState().recordView(coin(i));
@@ -49,10 +32,8 @@ describe("userListsStore", () => {
   });
 
   it("ignores corrupted saved data instead of crashing", () => {
-    localStorage.setItem("crypto_ai_platform:watchlist:u", "{not json");
     localStorage.setItem("crypto_ai_platform:recently_viewed:u", JSON.stringify([{ nope: true }]));
     useUserListsStore.getState().load("u");
-    expect(useUserListsStore.getState().watchlist).toEqual([]);
     expect(useUserListsStore.getState().recent).toEqual([]);
   });
 });

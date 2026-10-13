@@ -83,9 +83,6 @@ class RiskConfig:
     #: Components that must be available (a risk score without market-derived
     #: volatility or liquidity evidence would be meaningless).
     required_any_of: tuple[str, ...] = ("volatility", "liquidity")
-    #: Risk is always measured against the current price/volume, so without usable
-    #: (present and fresh) market data no risk score is produced at all.
-    require_market: bool = True
 
     #: Upper bound (inclusive) of each risk level on the 0-100 scale.
     level_bounds: tuple[tuple[str, float], ...] = (

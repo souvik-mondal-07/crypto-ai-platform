@@ -323,9 +323,6 @@ def calculate_risk(inputs: DecisionInputs, cfg: RiskConfig = DEFAULT_ENGINE_CONF
     result = RiskResult(available=False, coverage=round(coverage, 4), components=components,
                         config_version=DEFAULT_ENGINE_CONFIG.risk_config_version)
 
-    if cfg.require_market and not inputs.market.status.usable:
-        result.reason = inputs.market.status.reason or "Usable market data is required to establish a risk score."
-        return result
     if not avail or avail_weight <= 0:
         result.reason = "No risk component has usable data."
         return result

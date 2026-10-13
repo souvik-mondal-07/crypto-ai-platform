@@ -45,3 +45,13 @@ os.environ["MARKET_REFRESH_ENABLED"] = "false"
 from app.config import get_settings  # noqa: E402  (must follow the env var writes above)
 
 get_settings.cache_clear()
+
+
+# Phase 13: the repo-level `ml/` package sits next to `backend/`; make it importable
+# for tests regardless of which directory pytest is started from.
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_REPO_ROOT = str(Path(__file__).resolve().parents[2])
+if _REPO_ROOT not in sys.path:
+    sys.path.append(_REPO_ROOT)

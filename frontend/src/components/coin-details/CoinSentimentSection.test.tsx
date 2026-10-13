@@ -82,7 +82,8 @@ describe("CoinSentimentSection", () => {
     mocked.fetchCoinSentiment.mockResolvedValue(buildSentiment());
     const { container } = render(<CoinSentimentSection coinId={COIN} />);
     await screen.findByText("Positive 60.0%");
-    expect(container.innerHTML).toMatch(/dark:bg-slate-900/);
+    // Surface = shared `card` class (light + dark backgrounds defined in index.css).
+    expect(container.innerHTML).toMatch(/\bcard\b/);
     expect(container.innerHTML).toMatch(/dark:text-emerald-300/);
     expect(screen.getByText("Positive")).toBeInTheDocument(); // text label next to the colour
   });

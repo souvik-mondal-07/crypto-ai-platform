@@ -24,7 +24,7 @@ export function CoinNewsSection({ coinId, coinName }: { coinId: string; coinName
   return (
     <section
       aria-labelledby="coin-news-heading"
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className="mt-6 card card-pad"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 id="coin-news-heading" className="text-sm font-semibold text-slate-800 dark:text-slate-100">

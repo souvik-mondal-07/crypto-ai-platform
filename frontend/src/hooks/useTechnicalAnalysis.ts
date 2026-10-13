@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchTechnicalAnalysis } from "../services/api/technicalAnalysis.api";
 import type { Timeframe } from "../types/market";
 import type { TechnicalAnalysisResponse } from "../types/technicalAnalysis";
-import { ApiError } from "../types/apiError";
 
 type LoadStatus = "idle" | "loading" | "success" | "error";
 
@@ -43,10 +42,8 @@ export function useTechnicalAnalysis(coinId: string | undefined, timeframe: Time
       // Not enough historical data yet for this timeframe is a normal,
       // expected state for a thinly-traded or newly-listed coin — the
       // section should say so plainly rather than showing a generic error.
-      // The backend signals this with INSUFFICIENT_HISTORICAL_DATA ("Only N candles are available ...;
-      // at least M are needed ..."); the wording check covers callers without a code.
-      const byCode = caught instanceof ApiError && caught.code === "INSUFFICIENT_HISTORICAL_DATA";
-      setInsufficientData(byCode || /not enough|insufficient|candles are available|are needed to compute/i.test(message));
+      // Backend wording: "Only 5 candles are available …; at least 20 are needed to compute technical analysis."
+      setInsufficientData(/not enough|insufficient|candles are available/i.test(message));
       setError(message);
       setStatus("error");
     }

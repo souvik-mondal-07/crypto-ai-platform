@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react";
 
 import { useAiAnalysis } from "../../hooks/useAiAnalysis";
+import { useRecordHistory } from "../../hooks/useRecordHistory";
 import { useCountdownSeconds } from "../../hooks/useCountdown";
 import { AiAnalysisContent } from "../ai-analysis/AiAnalysisContent";
 import { AiAnalysisDisclaimer } from "../ai-analysis/AiAnalysisDisclaimer";
@@ -20,13 +21,14 @@ const MODEL_DISPLAY_NAME = "Gemini 3.1 Flash-Lite";
  */
 export function AiAnalysisSection({ coinId }: { coinId: string }) {
   const { data, loading, generating, refreshing, error, note, cooldownUntil, retry, regenerate } = useAiAnalysis(coinId);
+  useRecordHistory(coinId, "ai_analysis", data !== null);
   const secondsLeft = useCountdownSeconds(cooldownUntil);
   const regenerateDisabled = refreshing || secondsLeft > 0;
 
   return (
     <section
       aria-labelledby="coin-ai-analysis-heading"
-      className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+      className="mt-6 card card-pad"
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>

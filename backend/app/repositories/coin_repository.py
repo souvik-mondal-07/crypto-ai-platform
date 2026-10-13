@@ -178,17 +178,13 @@ class CoinRepository(BaseRepository):
         """
         raw = query.strip()
         escaped = re.escape(raw)
-        # `$regexMatch` expects `regex` to be a string/expression, not a
-        # MongoDB query-style `{ "$regex": ..., "$options": ... }` object.
-        # Keep the query-style regex objects for `$match`, but use plain
-        # patterns plus `options="i"` for the aggregation expressions.
-        exact_pattern = f"^{escaped}$"
-        starts_with_pattern = f"^{escaped}"
-        contains_pattern = escaped
-
-        exact = {"$regex": exact_pattern, "$options": "i"}
-        starts_with = {"$regex": starts_with_pattern, "$options": "i"}
-        contains = {"$regex": contains_pattern, "$options": "i"}
+        exact = {"$regex": f"^{escaped}$", "$options": "i"}
+        starts_with = {"$regex": f"^{escaped}", "$options": "i"}
+        contains = {"$regex": escaped, "$options": "i"}
+        # `$regexMatch` (used for the ranking below) takes the pattern and its options as SEPARATE fields — passing the
+        # `{"$regex": ..., "$options": ...}` query form there is rejected by MongoDB ("an object representing an
+        # expression must have exactly one field"). The `$match` stage above keeps the query form.
+        exact_re, starts_re, contains_re = f"^{escaped}$", f"^{escaped}", escaped
 
         pipeline: list[dict[str, Any]] = [
             {
@@ -206,76 +202,13 @@ class CoinRepository(BaseRepository):
                     "_rank": {
                         "$switch": {
                             "branches": [
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$providers.coingecko.id", ""]},
-                                            "regex": exact_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 0,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$name", ""]},
-                                            "regex": exact_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 1,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$symbol", ""]},
-                                            "regex": exact_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 2,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$name", ""]},
-                                            "regex": starts_with_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 3,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$symbol", ""]},
-                                            "regex": starts_with_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 4,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$name", ""]},
-                                            "regex": contains_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 5,
-                                },
-                                {
-                                    "case": {
-                                        "$regexMatch": {
-                                            "input": {"$ifNull": ["$symbol", ""]},
-                                            "regex": contains_pattern,
-                                            "options": "i",
-                                        }
-                                    },
-                                    "then": 6,
-                                },
+                                {"case": {"$regexMatch": {"input": "$providers.coingecko.id", "regex": exact_re, "options": "i"}}, "then": 0},
+                                {"case": {"$regexMatch": {"input": "$name", "regex": exact_re, "options": "i"}}, "then": 1},
+                                {"case": {"$regexMatch": {"input": "$symbol", "regex": exact_re, "options": "i"}}, "then": 2},
+                                {"case": {"$regexMatch": {"input": "$name", "regex": starts_re, "options": "i"}}, "then": 3},
+                                {"case": {"$regexMatch": {"input": "$symbol", "regex": starts_re, "options": "i"}}, "then": 4},
+                                {"case": {"$regexMatch": {"input": "$name", "regex": contains_re, "options": "i"}}, "then": 5},
+                                {"case": {"$regexMatch": {"input": "$symbol", "regex": contains_re, "options": "i"}}, "then": 6},
                             ],
                             "default": 7,
                         }
@@ -301,9 +234,7 @@ class CoinRepository(BaseRepository):
         # unlike the lazy `find()`), so it must be awaited to obtain
         # the `AsyncCommandCursor` before `to_list()` can be called.
         cursor = await self.collection.aggregate(pipeline)
-        results = await cursor.to_list(length=limit)
-        return results[:limit]
-
+        return await cursor.to_list(length=limit)
 
     async def list_coins(
         self,

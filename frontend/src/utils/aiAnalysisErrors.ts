@@ -1,4 +1,3 @@
-import { env } from "../config/environment";
 import { ApiError } from "../types/apiError";
 
 export type AiErrorKind =
@@ -65,18 +64,4 @@ export function describeAiError(error: unknown): AiErrorInfo {
     return { kind: "unknown", message: error.message || "The AI analysis request was not valid." };
   }
   return { kind: "unknown", message: "The AI analysis could not be loaded. Please retry." };
-}
-
-/**
- * Development-only diagnostics. The UI deliberately shows a short, safe message; this puts the real
- * cause (HTTP status, backend code, or the underlying JavaScript error) in the browser console so a
- * failing AI section is never a mystery. Never logs response bodies, tokens or any key.
- */
-export function logAiError(context: string, error: unknown): void {
-  if (!env.isDevelopment) return;
-  if (error instanceof ApiError) {
-    console.error(`[AI analysis] ${context} failed`, { status: error.status, code: error.code, message: error.message });
-  } else {
-    console.error(`[AI analysis] ${context} failed with a non-API error`, error);
-  }
 }

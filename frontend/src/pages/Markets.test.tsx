@@ -10,6 +10,7 @@ import { useMarketStore } from "../store/marketStore";
 import * as coinsApi from "../services/api/coins.api";
 import { ApiError } from "../types/apiError";
 import { useUserListsStore } from "../store/userListsStore";
+import { useWatchlistStore } from "../store/watchlistStore";
 import * as marketApi from "../services/api/market.api";
 
 vi.mock("../services/api/coins.api", () => ({
@@ -30,6 +31,19 @@ vi.mock("../services/api/market.api", () => ({
   fetchTopByMarketCap: vi.fn(),
   fetchTopByVolume: vi.fn(),
   fetchBinanceTickers: vi.fn(),
+}));
+
+vi.mock("../services/api/settings.api", () => ({
+  settingsApi: { get: vi.fn(() => Promise.resolve({ theme: null, notifications: { price_alerts: true } })), update: vi.fn() },
+}));
+
+vi.mock("../services/api/watchlist.api", () => ({
+  watchlistApi: {
+    list: vi.fn(),
+    add: vi.fn(() => Promise.resolve()),
+    remove: vi.fn(() => Promise.resolve()),
+    status: vi.fn(),
+  },
 }));
 
 const mockedCoinsApi = vi.mocked(coinsApi);
@@ -85,7 +99,8 @@ function resetStores() {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
-  useUserListsStore.setState({ userId: "1", watchlist: [], recent: [], compare: [] });
+  useUserListsStore.setState({ userId: "1", recent: [], compare: [] });
+  useWatchlistStore.setState({ userId: null, ids: [], status: "ready", error: null, notice: null, pending: [] });
   resetStores();
   mockedCoinsApi.fetchCoins.mockResolvedValue({ items: [], page: 1, limit: 20, total: 0, pages: 0 });
   mockedMarketApi.fetchMarketCoins.mockResolvedValue(emptyMarketResponse());
@@ -400,7 +415,7 @@ describe("Markets — watchlist and comparison", () => {
     await user.click(await screen.findByRole("button", { name: /add uniquely named coin to watchlist/i }));
 
     expect(screen.queryByText("Coin Details Page")).not.toBeInTheDocument();
-    expect(useUserListsStore.getState().watchlist).toEqual(["star-me"]);
+    expect(useWatchlistStore.getState().ids).toEqual(["star-me"]);
     expect(screen.getByRole("button", { name: /remove uniquely named coin from watchlist/i })).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -417,7 +432,7 @@ describe("Markets — watchlist and comparison", () => {
   });
 
   it("the Watchlist tab requests exactly the starred coin ids", async () => {
-    useUserListsStore.setState({ watchlist: ["w1", "w2"] });
+    useWatchlistStore.setState({ ids: ["w1", "w2"] });
     renderMarkets("/markets?tab=watchlist");
     await waitFor(() =>
       expect(mockedMarketApi.fetchMarketCoins).toHaveBeenLastCalledWith(expect.objectContaining({ coinIds: ["w1", "w2"] }))
@@ -479,7 +494,7 @@ describe("Markets — navigation", () => {
 });
 
 describe("Markets — theme compatibility", () => {
-  it("renders table rows with dark-mode classes alongside light ones", async () => {
+  it("renders table rows with the shared theme-aware row class", async () => {
     mockedMarketApi.fetchMarketCoins.mockResolvedValue(
       emptyMarketResponse({ items: [marketCoin()], total: 1, pages: 1 })
     );
@@ -488,7 +503,8 @@ describe("Markets — theme compatibility", () => {
     const nameCell = await screen.findByText("Uniquely Named Coin");
     const row = nameCell.closest("tr");
     expect(row).not.toBeNull();
-    expect(row?.getAttribute("class") ?? "").toContain("dark:");
+    // Rows use the shared `table-row` class, whose light AND dark styles (border, hover) live in index.css.
+    expect(row?.getAttribute("class") ?? "").toContain("table-row");
     expect(within(row as HTMLElement).getByText("UNC")).toBeInTheDocument();
   });
 });

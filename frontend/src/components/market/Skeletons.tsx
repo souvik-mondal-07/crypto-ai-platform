@@ -27,7 +27,7 @@ export function SkeletonRow() {
 
 export function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="animate-pulse card card-pad">
       <div className="h-3 w-20 rounded bg-slate-200 dark:bg-slate-800" />
       <div className="mt-3 h-5 w-28 rounded bg-slate-200 dark:bg-slate-800" />
     </div>

@@ -151,11 +151,11 @@ describe("News page — pagination and filters (server-side)", () => {
   it("ignores malformed URL filter values instead of sending them to the API", async () => {
     renderNews("/news?sentiment=bullish&from=nonsense&page=-4");
     await waitFor(() => expect(mockedNews.fetchNews).toHaveBeenCalled());
+    // Invalid values are dropped from the request entirely (undefined keys are not serialised), not sent as-is.
     const query = lastQuery();
-    expect(query.page).toBe(1);
-    // Malformed values must not be sent at all (the query omits the keys rather than sending them).
-    expect(query.sentiment).toBeUndefined();
-    expect(query.dateFrom).toBeUndefined();
+    expect(query).toMatchObject({ page: 1 });
+    expect(query).not.toHaveProperty("sentiment");
+    expect(query).not.toHaveProperty("dateFrom");
   });
 
   it("filters by coin from the URL and surfaces an invalid coin as a clear error", async () => {
@@ -166,8 +166,9 @@ describe("News page — pagination and filters (server-side)", () => {
     expect(lastQuery()).toMatchObject({ coinId: "507f1f77bcf86cd799439011" });
 
     mockedNews.fetchNews.mockResolvedValue(buildNewsList([buildArticle()]));
-    // Two controls legitimately clear the filter here (the chip's X and the error's button); use the error's.
-    await userEvent.setup().click(within(screen.getByRole("alert")).getByRole("button", { name: /clear coin filter/i }));
+    // Two controls carry this name: the filter chip's icon button (aria-label only) and the error's text button.
+    // The error's button is the one with visible text.
+    await userEvent.setup().click(screen.getByText("Clear coin filter", { selector: "button" }));
     expect(await screen.findByRole("link", { name: /test headline one/i })).toBeInTheDocument();
     expect(screen.getByTestId("location")).not.toHaveTextContent("coin=");
   });

@@ -3,7 +3,7 @@ import { RegisterForm } from "../components/auth/RegisterForm";
 
 export function Register() {
   return (
-    <AuthLayout title="Create your account" subtitle="Join Crypto AI Platform">
+    <AuthLayout variant="signup" title="Create your account" subtitle="Join Crypto AI Platform">
       <RegisterForm />
     </AuthLayout>
   );

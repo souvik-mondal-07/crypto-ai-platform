@@ -76,9 +76,9 @@ export function GlobalSearch() {
     <form
       role="search"
       onSubmit={handleSubmit}
-      className="relative ml-auto flex min-w-0 flex-1 items-center gap-1.5 sm:max-w-xs"
+      className="relative flex w-full min-w-0 items-center lg:ml-auto lg:max-w-sm"
     >
-      <div className="flex w-full items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 focus-within:ring-2 focus-within:ring-sky-500 dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex h-9 w-full min-w-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 transition-colors focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/40 dark:border-slate-700 dark:bg-slate-900">
         <Search className="h-4 w-4 flex-shrink-0 text-slate-400" aria-hidden="true" />
         <input
           ref={inputRef}
@@ -102,13 +102,13 @@ export function GlobalSearch() {
           autoComplete="off"
           className="w-full min-w-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400 dark:text-slate-200"
         />
-        <kbd className="hidden flex-shrink-0 rounded border border-slate-300 px-1 text-[10px] text-slate-500 dark:border-slate-600 dark:text-slate-400 lg:inline" title="Open the command palette">
+        <kbd className="pointer-events-none hidden flex-shrink-0 select-none whitespace-nowrap rounded border border-slate-300 px-1.5 py-0.5 text-[10px] leading-none text-slate-500 dark:border-slate-600 dark:text-slate-400 xl:inline" title="Open the command palette">
           Ctrl K
         </kbd>
       </div>
 
       {showPanel && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 min-w-[18rem] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:min-w-[22rem]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 min-w-0 sm:min-w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
           <ul id={listId} role="listbox" aria-label="Coin suggestions" className="max-h-80 overflow-y-auto">
             {results.map((coin, index) => (
               <SearchResultRow

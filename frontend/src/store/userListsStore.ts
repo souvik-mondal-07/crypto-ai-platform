@@ -3,15 +3,12 @@ import { create } from "zustand";
 import { readJson, userKey, writeJson } from "../utils/userStorage";
 
 /**
- * Client-side, per-user lists: the watchlist, recently viewed coins and the
- * comparison selection.
+ * Client-side, per-user lists: recently viewed coins and the comparison selection.
  *
- * IMPORTANT — what this is and isn't: the backend currently exposes no
- * watchlist or view-history API, so the watchlist and recently-viewed list
- * persist in this browser's localStorage only (namespaced by user id, see
- * utils/userStorage.ts). They do NOT sync across devices, and nothing here
- * pretends otherwise. When a server API lands, replace the read/write calls
- * in `load`/`persist` below — components only talk to this store.
+ * The WATCHLIST used to live here; since Phase 16 it is server-backed (see
+ * watchlistStore.ts and /api/v1/watchlist). The recently-viewed list is still
+ * device-local: it persists in this browser's localStorage only (namespaced by
+ * user id, see utils/userStorage.ts) and does NOT sync across devices.
  *
  * The comparison selection is intentionally in-memory only (a working set for
  * the current visit, not saved data).
@@ -30,13 +27,11 @@ export interface RecentCoin {
 
 interface UserListsState {
   userId: string | null;
-  watchlist: string[];
   recent: RecentCoin[];
   compare: string[];
 
   /** (Re)load persisted lists for a user; call whenever the signed-in user changes. */
   load: (userId: string | null) => void;
-  toggleWatchlist: (coinId: string) => void;
   recordView: (coin: Omit<RecentCoin, "viewed_at">) => void;
   clearRecent: () => void;
   toggleCompare: (coinId: string) => boolean;
@@ -44,12 +39,7 @@ interface UserListsState {
   clearCompare: () => void;
 }
 
-const WATCHLIST = "watchlist";
 const RECENT = "recently_viewed";
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
-}
 
 function isRecentArray(value: unknown): value is RecentCoin[] {
   return (
@@ -63,27 +53,17 @@ function isRecentArray(value: unknown): value is RecentCoin[] {
 
 export const useUserListsStore = create<UserListsState>((set, get) => ({
   userId: null,
-  watchlist: [],
   recent: [],
   compare: [],
 
   load: (userId) => {
     if (get().userId === userId && get().userId !== null) return;
-    const watchlist = readJson<unknown>(userKey(WATCHLIST, userId), []);
     const recent = readJson<unknown>(userKey(RECENT, userId), []);
     set({
       userId,
-      watchlist: isStringArray(watchlist) ? watchlist : [],
       recent: isRecentArray(recent) ? recent.slice(0, MAX_RECENT) : [],
       compare: [],
     });
-  },
-
-  toggleWatchlist: (coinId) => {
-    const { watchlist, userId } = get();
-    const next = watchlist.includes(coinId) ? watchlist.filter((id) => id !== coinId) : [coinId, ...watchlist];
-    set({ watchlist: next });
-    writeJson(userKey(WATCHLIST, userId), next);
   },
 
   recordView: (coin) => {

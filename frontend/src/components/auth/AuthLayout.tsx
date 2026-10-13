@@ -13,9 +13,9 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
         <div className="mb-6 text-center">
           <img src="/logo.svg" alt="" className="mx-auto mb-3 h-10 w-10" />
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+          {subtitle && <p className="page-subtitle">{subtitle}</p>}
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">{children}</div>
+        <div className="card p-5 sm:p-6">{children}</div>
       </div>
     </div>
   );

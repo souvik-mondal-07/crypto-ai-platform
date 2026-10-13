@@ -49,9 +49,8 @@ the lost coverage lowers the confidence.
 | Prediction | 15% | predicted direction, predicted-return range width, calibrated model confidence |
 
 Each sub-factor maps its input to 0-100 through a piecewise-linear curve in `risk_config.py`.
-A component with no available sub-factor is excluded. A score is produced only if usable (present and fresh) market data exists, at least
-`min_coverage` (50%) of the weight is backed by data, **and** volatility or liquidity evidence exists.
-Without usable market data the risk score and level are `null`.
+A component with no available sub-factor is excluded. A score is produced only if at least
+`min_coverage` (50%) of the weight is backed by data **and** volatility or liquidity evidence exists.
 
 | Score | Level |
 |---|---|

@@ -31,11 +31,18 @@ const LIGHT_THEME = {
 };
 
 const DARK_THEME = {
-  background: "#0f172a",
-  textColor: "#cbd5e1",
-  gridColor: "#1e293b",
-  borderColor: "#334155",
+  background: "#0e1524",
+  textColor: "#94a3b8",
+  gridColor: "#172033",
+  borderColor: "#25324a",
 };
+
+/** Axis / crosshair price label: thousands separators, and extra precision for sub-dollar assets. */
+function formatAxisPrice(price: number): string {
+  const abs = Math.abs(price);
+  const digits = abs >= 1000 ? 2 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : 8;
+  return `$${price.toLocaleString("en-US", { minimumFractionDigits: digits === 2 ? 2 : 0, maximumFractionDigits: digits })}`;
+}
 
 /**
  * Candlestick price chart. Zoom/pan/crosshair come from the library.
@@ -71,18 +78,19 @@ export function CandlestickChart({ candles, height = 400, showMovingAverages = f
       },
       rightPriceScale: { borderColor: LIGHT_THEME.borderColor },
       timeScale: { borderColor: LIGHT_THEME.borderColor, timeVisible: true },
+      localization: { priceFormatter: formatAxisPrice },
       crosshair: { mode: 1 },
       handleScroll: true,
       handleScale: true,
     });
 
     const series = chart.addCandlestickSeries({
-      upColor: "#16a34a",
-      downColor: "#dc2626",
-      borderUpColor: "#16a34a",
-      borderDownColor: "#dc2626",
-      wickUpColor: "#16a34a",
-      wickDownColor: "#dc2626",
+      upColor: "#10b981",
+      downColor: "#ef4444",
+      borderUpColor: "#10b981",
+      borderDownColor: "#ef4444",
+      wickUpColor: "#10b981",
+      wickDownColor: "#ef4444",
     });
 
     // Moving-average overlay lines — created once (like the

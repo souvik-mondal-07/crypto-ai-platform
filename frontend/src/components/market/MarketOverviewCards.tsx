@@ -16,7 +16,7 @@ interface OverviewCardsProps {
 
 function StatCard({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
       <p className={`mt-1.5 text-lg font-semibold text-slate-900 dark:text-slate-100 ${valueClassName ?? ""}`}>
         {value}
@@ -68,7 +68,7 @@ export function MarketOverviewCards({
           overview?.active_cryptocurrencies !== undefined ? overview.active_cryptocurrencies.toLocaleString() : "N/A"
         }
       />
-      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="card card-pad">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Market Trend (24h)</p>
         <p className={`mt-1.5 flex items-center gap-1.5 text-lg font-semibold ${changeColorClass(marketCapChange)}`}>
           <TrendIcon className="h-4 w-4" aria-hidden="true" />

@@ -79,8 +79,9 @@ describe("NewsCard", () => {
   it("uses theme-aware classes (light and dark variants) for text and surfaces", () => {
     const { container } = renderCard({ article: buildArticle() });
     const html = container.innerHTML;
-    expect(html).toMatch(/bg-white/);
-    expect(html).toMatch(/dark:bg-slate-900/);
+    // The surface is the shared `card` class (index.css), which defines BOTH the light (white) and dark (navy)
+    // backgrounds; text colours stay inline with explicit dark: variants.
+    expect(html).toMatch(/\bcard\b/);
     expect(html).toMatch(/dark:text-slate-100/);
   });
 });

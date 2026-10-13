@@ -28,7 +28,7 @@ import type {
 
 export const NOT_AVAILABLE_LABEL = "Not available";
 
-const CARD = "rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900";
+const CARD = "card card-pad";
 const BADGE_BASE = "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide";
 
 export function ProviderBadge() {

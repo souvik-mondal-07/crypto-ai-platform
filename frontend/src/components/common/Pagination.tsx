@@ -12,8 +12,7 @@ interface PaginationProps {
 /** Previous / Next pager with an explicit "Page x of y" — works for any paginated list. */
 export function Pagination({ page, pages, onPageChange, disabled = false, label = "results" }: PaginationProps) {
   if (pages <= 1) return null;
-  const buttonClass =
-    "inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800";
+  const buttonClass = "btn-secondary";
 
   return (
     <nav aria-label={`${label} pagination`} className="mt-4 flex items-center justify-between gap-3">

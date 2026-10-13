@@ -46,7 +46,7 @@ export function FilterPanel({ selection, onChange }: FilterPanelProps) {
           type="button"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="btn-secondary"
         >
           <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
           Filters
@@ -64,7 +64,7 @@ export function FilterPanel({ selection, onChange }: FilterPanelProps) {
       </div>
 
       {open && (
-        <div className="mt-3 flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mt-3 flex flex-wrap gap-3 card card-pad">
           <Field label="Market cap">
             <select value={selection.cap} onChange={(e) => set("cap", e.target.value as FilterSelection["cap"])} className={SELECT}>
               {CAP_PRESETS.map((preset) => <option key={preset.key} value={preset.key}>{preset.label}</option>)}

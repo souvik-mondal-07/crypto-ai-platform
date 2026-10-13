@@ -16,7 +16,7 @@ interface CoinStatsProps {
 
 function StatCard({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
       <p className={`mt-1.5 text-base font-semibold text-slate-900 dark:text-slate-100 ${valueClassName ?? ""}`}>
         {value}
@@ -57,7 +57,7 @@ export function CoinPricePerformance({ market }: { market: MarketData | null }) 
   ];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <h3 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">Price Performance</h3>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {periods.map(({ label, value }) => (
@@ -82,7 +82,7 @@ export function CoinPricePerformance({ market }: { market: MarketData | null }) 
  */
 export function CoinAthAtl({ market }: { market: MarketData | null }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="card card-pad">
       <h3 className="mb-3 text-sm font-semibold text-slate-800 dark:text-slate-100">All-Time High / Low</h3>
       <dl className="grid grid-cols-2 gap-4">
         <div>

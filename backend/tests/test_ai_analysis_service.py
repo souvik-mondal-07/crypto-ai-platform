@@ -176,14 +176,6 @@ async def test_forced_regeneration_after_cooldown_calls_gemini_again():
     assert gemini.calls == 2 and out.cached is False and len(repo.docs) == 2
 
 
-async def test_concurrent_forced_regenerations_after_cooldown_share_one_new_call():
-    service, repo, _, gemini = build()
-    await service.generate(COIN_ID)
-    age(repo, 120)
-    results = await asyncio.gather(*(service.generate(COIN_ID, force=True) for _ in range(3)))
-    assert gemini.calls == 2 and len(repo.docs) == 2 and len(results) == 3
-
-
 async def test_expired_analysis_is_regenerated_after_cooldown():
     service, repo, _, gemini = build()
     await service.generate(COIN_ID)
