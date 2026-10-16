@@ -1,4 +1,4 @@
-import { BarChart3, Bell, History as HistoryIcon, LayoutDashboard, Newspaper, Star, Wallet, type LucideIcon } from "lucide-react";
+import { BarChart3, Bell, FlaskConical, History as HistoryIcon, LayoutDashboard, Newspaper, Star, Wallet, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   to: string;
@@ -19,4 +19,5 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/alerts", label: "Alerts", icon: Bell },
   { to: "/news", label: "News & Sentiment", icon: Newspaper },
   { to: "/history", label: "History", icon: HistoryIcon },
+  { to: "/backtesting", label: "Backtesting & Accuracy", icon: FlaskConical },
 ];

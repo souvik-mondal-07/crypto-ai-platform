@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { NAV_ITEMS } from "./navigation";
 import { Sidebar } from "./Sidebar";
 
-const ROUTES = ["/dashboard", "/markets", "/watchlist", "/portfolio", "/alerts", "/news", "/history", "/settings", "/profile"];
+const ROUTES = ["/dashboard", "/markets", "/watchlist", "/portfolio", "/alerts", "/news", "/history", "/backtesting", "/settings", "/profile"];
 
 function renderSidebar(props: { mobileOpen?: boolean; onMobileClose?: () => void; path?: string; alertCount?: number } = {}) {
   const onMobileClose = props.onMobileClose ?? vi.fn();

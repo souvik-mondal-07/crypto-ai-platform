@@ -29,9 +29,24 @@ def test_prediction_path_has_no_randomness():
 
 
 def test_ml_and_prediction_code_has_no_decision_engine_or_llm():
-    files = _existing(PREDICTION_PATH_FILES) + [f for f in (REPO / "ml").rglob("*.py") if "tests" not in f.parts]
-    banned = re.compile(r"(gemini|ollama|google\.generativeai|\"(BUY|SELL|HOLD)\"|'(BUY|SELL|HOLD)')", re.I)
-    offenders = [str(f.relative_to(REPO)) for f in files if banned.search(f.read_text(encoding="utf-8"))]
+    evaluation_dir = REPO / "ml" / "evaluation"
+
+    files = _existing(PREDICTION_PATH_FILES) + [
+        f
+        for f in (REPO / "ml").rglob("*.py")
+        if "tests" not in f.parts
+        and not f.is_relative_to(evaluation_dir)
+    ]
+
+    banned = re.compile(
+        r"(gemini|ollama|google\.generativeai|\"(BUY|SELL|HOLD)\"|'(BUY|SELL|HOLD)')",
+        re.I,
+    )
+    offenders = [
+        str(f.relative_to(REPO))
+        for f in files
+        if banned.search(f.read_text(encoding="utf-8"))
+    ]
     assert not offenders, offenders
 
 

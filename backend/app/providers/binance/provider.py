@@ -109,6 +109,33 @@ class BinanceProvider(MarketDataProvider):
                 continue
         return out
 
+    async def get_klines_range(self, symbol: str, interval: str, start: datetime, end: datetime,
+                               max_candles: int = 10_000) -> list[list]:
+        """Real exchange klines whose OPEN time lies in [start, end], paged 1000 at a time (Phase 17).
+
+        Used to look up ACTUAL historical prices for outcome matching and backtests. Stops at `max_candles`
+        so a request can never page without bound. Rows are returned raw, oldest first, de-duplicated by open time.
+        """
+        interval_ms = {"1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000}[interval]
+        cursor = int(start.timestamp() * 1000)
+        end_ms = int(end.timestamp() * 1000)
+        rows: dict[int, list] = {}
+        async with httpx.AsyncClient() as http_client:
+            while cursor <= end_ms and len(rows) < max_candles:
+                page = await self._client.get_klines(http_client, symbol, interval, 1000,
+                                                     start_time_ms=cursor, end_time_ms=end_ms)
+                if not page:
+                    break
+                for row in page:
+                    rows[int(row[0])] = row
+                last_open = int(page[-1][0])
+                if last_open < cursor:  # no progress -> stop rather than loop forever
+                    break
+                cursor = last_open + interval_ms
+                if len(page) < 1000:
+                    break
+        return [rows[k] for k in sorted(rows)][:max_candles]
+
     async def get_klines(self, symbol: str, interval: str, limit: int) -> list[list]:
         """Raw exchange klines (open-time ms, OHLCV, ...) for the ML prediction engine.
 

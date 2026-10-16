@@ -34,6 +34,24 @@ class PredictionRepository(BaseRepository):
             {"coin_id": coin_id, "status": "active"}, sort=[("generated_at", DESCENDING)]
         )
 
+    # --- Phase 17: read-only helpers for outcome matching (stored predictions are never modified) ---
+
+    async def list_matured(
+        self, before: datetime, *, skip: int = 0, limit: int = 500, coin_id: Optional[ObjectId] = None
+    ) -> list[dict[str, Any]]:
+        """Predictions whose `target_time` has passed, newest target first (stable order, paged by skip/limit)."""
+        query: dict[str, Any] = {"target_time": {"$lte": before}}
+        if coin_id is not None:
+            query["coin_id"] = coin_id
+        cursor = self.collection.find(query).sort([("target_time", DESCENDING), ("_id", DESCENDING)]).skip(skip).limit(limit)
+        return await cursor.to_list(length=limit)
+
+    async def count_matured(self, before: datetime) -> int:
+        return await self.collection.count_documents({"target_time": {"$lte": before}})
+
+    async def count_total(self) -> int:
+        return await self.collection.count_documents({})
+
     @staticmethod
     def is_expired(doc: dict[str, Any], now: Optional[datetime] = None) -> bool:
         expires_at = doc.get("expires_at")
@@ -42,3 +60,4 @@ class PredictionRepository(BaseRepository):
         if expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         return (now or datetime.now(timezone.utc)) >= expires_at
+

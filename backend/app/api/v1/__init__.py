@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter
 
 from app.api.v1 import (
-    ai_analysis, alerts, auth, coins, decisions, health, history, market, news, portfolio, predictions, profile, watchlist,
+    ai_analysis, alerts, auth, backtesting, coins, decisions, health, history, market, news, portfolio, predictions, profile, watchlist,
 )
 from app.config import get_settings
 
@@ -26,6 +26,9 @@ api_router.include_router(history.router)
 api_router.include_router(alerts.router)
 api_router.include_router(profile.router)
 api_router.include_router(profile.settings_router)
+
+# Phase 17 — backtesting & model accuracy (authenticated; historical evaluation only, never trades).
+api_router.include_router(backtesting.router)
 
 # Dev-only sync trigger — only registered (route exists at all) when
 # explicitly enabled. See app/api/v1/dev_sync.py: this endpoint does

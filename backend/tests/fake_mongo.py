@@ -1,5 +1,5 @@
 """Tiny in-memory stand-in for PyMongo's async collections (equality/$in/$gt/$gte/$lt/$lte/$ne filters,
-$set, sort/skip/limit). It lets the Phase 16 tests run the REAL repositories/services/routes — including
+$set/$setOnInsert + upsert, sort/skip/limit). It lets the Phase 16 tests run the REAL repositories/services/routes — including
 their `user_id` scoping — without a MongoDB server."""
 
 from copy import deepcopy
@@ -104,6 +104,12 @@ class FakeCollection:
     async def update_one(self, flt, update, upsert=False):
         docs = self._select(flt)
         if not docs:
+            if upsert:  # equality parts of the filter + $set/$setOnInsert, like MongoDB's upsert
+                doc = {k: v for k, v in flt.items() if not isinstance(v, dict)}
+                for key, value in {**update.get("$setOnInsert", {}), **update.get("$set", {})}.items():
+                    _set_path(doc, key, value)
+                await self.insert_one(doc)
+                return SimpleNamespace(matched_count=0, modified_count=0, upserted_id=doc.get("_id"))
             return SimpleNamespace(matched_count=0, modified_count=0)
         for key, value in update.get("$set", {}).items():
             _set_path(docs[0], key, value)

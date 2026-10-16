@@ -255,6 +255,39 @@ async def initialize_indexes(db: AsyncDatabase) -> None:
             name="idx_decisions_engineversion_generatedat",
         )
 
+        # Phase 17 — backtesting & model accuracy.
+        # predictions are also read by "matured before <now>" when outcomes are matched.
+        await db[CollectionName.PREDICTIONS.value].create_index(
+            [("target_time", DESCENDING)], name="idx_predictions_targettime"
+        )
+        # prediction_results (existing collection, now used): one evaluated outcome per
+        # (record_type, source record, horizon). The UNIQUE index makes matching idempotent — re-running an
+        # evaluation can never duplicate a result.
+        await db[CollectionName.PREDICTION_RESULTS.value].create_index(
+            [("record_type", ASCENDING), ("source_id", ASCENDING), ("horizon", ASCENDING)],
+            unique=True, name="uniq_predictionresults_type_source_horizon",
+        )
+        await db[CollectionName.PREDICTION_RESULTS.value].create_index(
+            [("record_type", ASCENDING), ("coin_id", ASCENDING), ("horizon", ASCENDING), ("target_time", DESCENDING)],
+            name="idx_predictionresults_type_coin_horizon_target",
+        )
+        await db[CollectionName.PREDICTION_RESULTS.value].create_index(
+            [("record_type", ASCENDING), ("model", ASCENDING), ("model_version", ASCENDING), ("horizon", ASCENDING)],
+            name="idx_predictionresults_type_model_version_horizon",
+        )
+        # decisions are read per coin over a time window by the backtest engine
+        # (the existing (coin_id, generated_at) index already covers that range scan).
+        # backtest_runs: user-scoped, so every query leads with user_id; run_id is the public identifier.
+        await db[CollectionName.BACKTEST_RUNS.value].create_index(
+            "run_id", unique=True, name="uniq_backtestruns_runid"
+        )
+        await db[CollectionName.BACKTEST_RUNS.value].create_index(
+            [("user_id", ASCENDING), ("created_at", DESCENDING)], name="idx_backtestruns_user_createdat"
+        )
+        await db[CollectionName.BACKTEST_RUNS.value].create_index(
+            [("status", ASCENDING), ("updated_at", ASCENDING)], name="idx_backtestruns_status_updatedat"
+        )
+
         # ai_analysis (Phase 15): insert-only history of Gemini explanations, read as "latest analysis
         # for a coin"; prompt_version/model are indexed so later phases can compare prompt versions.
         # expires_at is deliberately NOT a TTL index.

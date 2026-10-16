@@ -44,6 +44,7 @@ def test_collection_name_registry_has_all_planned_collections():
         "sentiment", "predictions", "decisions", "prediction_results",
         "watchlists", "portfolios", "portfolio_transactions", "alerts",
         "analysis_history", "model_metrics", "ai_analysis",
+        "backtest_runs",  # Phase 17: user-triggered backtest runs (the only new collection)
     }
     actual = {c.value for c in CollectionName}
     assert expected == actual

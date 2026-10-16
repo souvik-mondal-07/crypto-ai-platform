@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.database import connect, disconnect, get_database, initialize_indexes
 from app.schemas.health import RootResponse
+from app.services.backtest_service import BacktestService
 from app.services.market_refresh_scheduler import get_scheduler
 from app.services.news_refresh_scheduler import get_news_scheduler
 
@@ -77,6 +78,12 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     except RuntimeError:
         # get_database() raising because connect() didn't establish a client
         pass
+
+    # Phase 17: a backtest run left queued/running by a previous process can never finish; mark it failed.
+    try:
+        await BacktestService().fail_interrupted_runs()
+    except Exception:  # best-effort hygiene — never blocks startup (e.g. database not connected)
+        logger.debug("Could not clean up interrupted backtest runs.", exc_info=True)
 
     # Background market-data refresh (Parts 2-3). Started only once per
     # process, after the DB connection attempt above; disabled entirely

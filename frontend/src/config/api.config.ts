@@ -53,5 +53,13 @@ export const apiConfig = {
     profile: "/profile",
     profilePassword: "/profile/password",
     settings: "/settings",
+    // Phase 17 — backtesting & model accuracy (authenticated; historical evaluation only).
+    backtestingConfig: "/backtesting/config",
+    backtestingAccuracy: "/backtesting/accuracy",
+    backtestingAccuracyRefresh: "/backtesting/accuracy/refresh",
+    backtestingDecisions: "/backtesting/decisions",
+    backtestingRuns: "/backtesting/runs",
+    backtestingRun: (runId: string) => `/backtesting/runs/${runId}`,
+    backtestingRunTrades: (runId: string) => `/backtesting/runs/${runId}/trades`,
   },
 } as const;

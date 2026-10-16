@@ -256,3 +256,13 @@ Explicitly trained, chronologically validated XGBoost / LightGBM / LSTM-GRU mode
 - `ai_analysis` collection + `GET /api/v1/ai-analysis/{coin_id}` and `POST /api/v1/ai-analysis/{coin_id}/generate`
 - "AI Analysis" section on Coin Details; Gemini is optional and never changes the Phase 14 decision
 - See [ai-analysis.md](ai-analysis.md)
+
+
+## Phase 17 — Backtesting & Model Accuracy (implemented)
+
+- Matches matured predictions and stored Phase 14 decisions with the real market outcome, computes accuracy metrics,
+  and simulates the Phase 14 decisions over real historical candles with explicit fees, slippage and sizing
+- Pure, versioned, look-ahead-safe evaluation code in `ml/evaluation/`; results in the existing `prediction_results`
+  collection; user-scoped runs in the new `backtest_runs` collection
+- `/api/v1/backtesting/*` endpoints and the protected `/backtesting` page
+- Historical evaluation only: no trading, no paper trading, no new models. See [backtesting.md](backtesting.md)

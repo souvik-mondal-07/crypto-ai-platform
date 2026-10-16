@@ -188,3 +188,24 @@ backend/app/schemas/decisions.py (mirrored in frontend/src/types/decisions.ts).
 `POST /ai-analysis/{coin_id}/generate[?force_refresh=true]` returns a fresh stored explanation or generates one (login required).
 The response wraps the explanation with the official Phase 14 `decision_snapshot`, `data_availability`, model/prompt
 versions and cache flags. Full details: [ai-analysis.md](ai-analysis.md).
+
+## Backtesting & Model Accuracy (Phase 17)
+
+All routes require a bearer token. Accuracy endpoints describe the platform's stored predictions/decisions and only
+READ stored results; backtest runs belong to the authenticated user (taken from the JWT, never from the body).
+Full definitions: [backtesting.md](backtesting.md).
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/backtesting/config` | engine/methodology versions, options, defaults and limits |
+| GET | `/backtesting/accuracy?horizon=&model=&model_version=&coin_id=` | overall + by horizon/model/coin accuracy, coverage, limitations |
+| GET | `/backtesting/accuracy/{coin_id}?horizon=` | the same for one coin |
+| POST | `/backtesting/accuracy/refresh` | (202) match matured predictions/decisions with real outcomes in the background |
+| GET | `/backtesting/accuracy/refresh` | state of that background refresh |
+| GET | `/backtesting/decisions?horizon=&coin_id=` | BUY/HOLD/SELL evaluated against subsequent returns |
+| POST | `/backtesting/runs` | (202) queue a backtest; unknown fields (e.g. `user_id`) are rejected with 422 |
+| GET | `/backtesting/runs?page=&limit=` | the caller's runs, newest first |
+| GET | `/backtesting/runs/{run_id}` | status, summary, assumptions, equity/benchmark curves, warnings |
+| GET | `/backtesting/runs/{run_id}/trades?page=&limit=` | paginated simulated fills |
+
+Errors use the standard envelope. A run owned by another user returns the same `404 BACKTEST_NOT_FOUND` as a missing one.

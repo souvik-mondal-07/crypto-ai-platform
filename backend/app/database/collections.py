@@ -32,3 +32,4 @@ class CollectionName(str, Enum):
     ALERTS = "alerts"
     ANALYSIS_HISTORY = "analysis_history"
     MODEL_METRICS = "model_metrics"
+    BACKTEST_RUNS = "backtest_runs"  # Phase 17: user-triggered backtest runs (metadata + results)

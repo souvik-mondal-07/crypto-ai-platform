@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import {
   Alerts,
+  Backtesting,
   CoinDetails,
   Dashboard,
   History,
@@ -24,7 +25,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
  * /dashboard, /markets, /news (Phase 12) and /coins/:coinId (Step 5) are the "real app"
  * pages and require authentication, consistent with how Step 4
  * protected /dashboard. Phase 16's user-feature pages (/watchlist, /portfolio,
- * /history, /alerts, /profile, /settings) are protected the same way. The landing page (/), /login, and /register
+ * /history, /alerts, /profile, /settings) and Phase 17's /backtesting are protected the same way. The landing page (/), /login, and /register
  * remain public.
  */
 export function AppRoutes() {
@@ -95,6 +96,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <Alerts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/backtesting"
+        element={
+          <ProtectedRoute>
+            <Backtesting />
           </ProtectedRoute>
         }
       />

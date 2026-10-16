@@ -13,3 +13,4 @@ export { History } from "./History/History";
 export { Alerts } from "./Alerts";
 export { Profile } from "./Profile";
 export { Settings } from "./Settings";
+export { Backtesting } from "./Backtesting/Backtesting";

@@ -545,6 +545,30 @@ happened — the basis for future backtesting and accuracy tracking.
 
 ---
 
+### Phase 17 usage of `prediction_results`
+
+`prediction_results` now stores one evaluated outcome per `(record_type, source_id, horizon)`:
+
+- `record_type: "prediction"` — a matured prediction vs the actual price at its horizon (`status`, `actual_price`,
+  `actual_return`, denormalised model/version/horizon/coin for filtering, `methodology_version`, `evaluated_at`)
+- `record_type: "decision"` — a stored BUY/HOLD/SELL decision vs the forward return (`decision`, `reference_price`,
+  `reference_source`, `forward_return`)
+
+Indexes: unique `(record_type, source_id, horizon)` (idempotent matching, no duplicates),
+`(record_type, coin_id, horizon, target_time desc)` and `(record_type, model, model_version, horizon)`.
+The fields planned in Step 2 (`prediction_id`, `error`, `direction_correct`, `actual_direction`, `actual_price`) are populated for
+prediction records; `source_id` generalises `prediction_id` because the collection now also holds decision evaluations.
+A supporting `predictions.target_time` index serves "matured before now" scans.
+
+## `backtest_runs`
+
+One document per user-triggered backtest: `run_id` (unique, public id), `user_id` (from the JWT), `status`
+(`queued|running|completed|failed`), `result_status` (`ok|insufficient_data`), `engine_version`, `strategy`, `coin_ids`,
+`period_start/end`, `starting_capital`, `assumptions` (fees, slippage, sizing, execution rule), `summary` metrics,
+down-sampled `equity_curve` / `benchmark_curve`, `trades` (capped), `warnings`, `data_summary`, `error`, timestamps.
+Indexes: unique `run_id`; `(user_id, created_at desc)`; `(status, updated_at)` (startup clean-up of interrupted runs).
+Historical candles are NOT stored here — they are read from the exchange and cached briefly in memory.
+
 ## `watchlists`
 
 **Purpose:** Coins a user is tracking. No watchlist functionality
